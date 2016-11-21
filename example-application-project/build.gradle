@@ -1,0 +1,7 @@
+plugins {
+    id 'application'
+}
+
+version = "1.0"
+
+mainClassName = "com.github.kolleroot.gradle.kubernetes.example.application.ExampleApp"
