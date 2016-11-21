@@ -1,0 +1,3 @@
+include ":plugin"
+include ":example-web-project"
+include ":standalone-test"

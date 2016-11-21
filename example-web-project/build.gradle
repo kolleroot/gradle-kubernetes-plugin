@@ -1,0 +1,27 @@
+/*buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath 'com.github.kolleroot.gradle:gradle-kubernetes-plugin:0.1'
+    }
+}*/
+
+plugins {
+    id 'war'
+    // id 'com.palantir.docker' version '0.9.1'
+}
+
+// apply plugin: 'com.github.kolleroot.gradle.kubernetes'
+
+dependencies {
+    providedCompile "javax:javaee-api:${libraryVersions.javaeeApi}"
+}
+
+/*
+docker {
+    name 'localhost:5000/example-project/web:version'
+    tags 'latest'
+}*/

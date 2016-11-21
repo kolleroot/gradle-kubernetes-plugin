@@ -1,0 +1,38 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'maven-publish'
+}
+
+group = 'com.github.kolleroot.gradle'
+version = '0.1'
+
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+
+    testCompile gradleTestKit()
+    testCompile "junit:junit:${libraryVersions.junit}"
+    testCompile "org.spockframework:spock-core:${libraryVersions.spock}"
+}
+
+gradlePlugin {
+    plugins {
+        kubernetesDeploymentPlugin {
+            id = 'com.gradle.kolleroot.gradle.kubernetes'
+            implementationClass = 'com.github.kolleroot.gradle.kubernetes.KubernetesPlugin'
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.github.kolleroot.gradle'
+            artifactId 'gradle-kubernetes-plugin'
+            version '0.1'
+
+            from components.java
+        }
+    }
+}

@@ -1,0 +1,12 @@
+ext {
+    libraryVersions = [
+            // groovyAll       : '2.4.7', // use the groovy version of gradle
+            kubernetesClient: '1.4.20',
+            slf4j           : '1.7.21',
+
+            javaeeApi       : '7.0',
+
+            junit           : '4.12',
+            spock           : '1.0-groovy-2.4'
+    ]
+}
