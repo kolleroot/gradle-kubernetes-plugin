@@ -13,6 +13,7 @@ dependencies {
 
     testCompile gradleTestKit()
     testCompile "junit:junit:${libraryVersions.junit}"
+    testCompile "org.codehaus.groovy:groovy-all:${libraryVersions.groovyAll}"
     testCompile "org.spockframework:spock-core:${libraryVersions.spock}"
 }
 

@@ -1,8 +1,11 @@
+println "Groovy: " + GroovySystem.getVersion()
+
 ext {
     libraryVersions = [
-            // groovyAll       : '2.4.7', // use the groovy version of gradle
+            groovyAll       : GroovySystem.getVersion(), // use the groovy version of gradle
             kubernetesClient: '1.4.20',
             slf4j           : '1.7.21',
+            dockerPlugin    : '3.0.3',
 
             javaeeApi       : '7.0',
 

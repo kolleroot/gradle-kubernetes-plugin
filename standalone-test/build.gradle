@@ -6,7 +6,7 @@ plugins {
 mainClassName = 'de.hsa.gradle.kubernetes.standalone.StandaloneTest'
 
 dependencies {
-    compile "org.codehaus.groovy:groovy-all:${libraryVersions.groovyAll}"
+    compile localGroovy()
 
     compile "org.slf4j:slf4j-api:${libraryVersions.slf4j}"
     runtime "org.slf4j:slf4j-log4j12:${libraryVersions.slf4j}"
