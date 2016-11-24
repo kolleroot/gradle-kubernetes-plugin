@@ -15,16 +15,7 @@ class KubernetesPlugin implements Plugin<Project> {
 
     private static final def KUBERNETES_EXTENSION_NAME = 'kubernetes'
 
-    private KubernetesExtension kubernetesExtension;
-
     @Override
     void apply(Project project) {
-        kubernetesExtension = new KubernetesExtension(project);
-
-        project.extensions.add(KUBERNETES_EXTENSION_NAME, kubernetesExtension)
-
-        project.afterEvaluate {
-            new WarProjectPredicate().test(project)
-        }
     }
 }
