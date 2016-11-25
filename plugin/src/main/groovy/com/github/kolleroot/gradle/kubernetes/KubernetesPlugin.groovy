@@ -1,21 +1,38 @@
 package com.github.kolleroot.gradle.kubernetes
 
-import com.github.kolleroot.gradle.kubernetes.internal.WarProjectPredicate
+import com.github.kolleroot.gradle.kubernetes.models.DefaultKubernetesSpec
+import com.github.kolleroot.gradle.kubernetes.models.KubernetesSpec
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-
-import java.lang.reflect.Method
+import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.internal.reflect.Instantiator
+import org.gradle.model.Model
+import org.gradle.model.Mutate
+import org.gradle.model.RuleSource
 
 /**
- * The entry point into the plugin.
+ * This is the main kubernetes plugin.
  *
- * This class applies the extensions and configurations to the project.
+ * It will apply all the extensions to the project and generate the required tasks
  */
 class KubernetesPlugin implements Plugin<Project> {
 
     private static final def KUBERNETES_EXTENSION_NAME = 'kubernetes'
 
     @Override
-    void apply(Project project) {
+    void apply(Project project) {}
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    static class Rules extends RuleSource {
+
+        @Model
+        KubernetesSpec kubernetesModel(Instantiator instantiator) {
+            return instantiator.newInstance(DefaultKubernetesSpec)
+        }
+
+        @Mutate
+        void registerKubernetesExtension(ExtensionContainer extensions, KubernetesSpec kubernetes) {
+            extensions.add(KUBERNETES_EXTENSION_NAME, kubernetes)
+        }
     }
 }
