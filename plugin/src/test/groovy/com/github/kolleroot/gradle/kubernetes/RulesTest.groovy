@@ -1,5 +1,6 @@
 package com.github.kolleroot.gradle.kubernetes
 
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -15,8 +16,20 @@ class RulesTest extends Specification {
 
     File buildFile
 
+    BuildResult result
+
     void setup() {
         buildFile = buildFolder.newFile("build.gradle")
+    }
+
+    private void succeeds(String arguments) {
+        result = GradleRunner
+                .create()
+                .withDebug(true)
+                .withProjectDir(buildFolder.root)
+                .withPluginClasspath()
+                .withArguments(arguments)
+                .build()
     }
 
     def "register the kubernetes extension"() {
@@ -35,12 +48,37 @@ task test(dependsOn: model) {
 }
 """
         when:
-        def result = GradleRunner
-                .create()
-                .withProjectDir(buildFolder.root)
-                .withPluginClasspath()
-                .withArguments('test')
-                .build()
+        succeeds 'test'
+
+        then:
+        result.output.contains 'Success'
+    }
+
+    def "create docker image"() {
+        given:
+        buildFile << """
+import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
+
+plugins {
+    id 'com.gradle.kolleroot.gradle.kubernetes'
+}
+
+kubernetes {
+    dockerImages {
+        test(DefaultDockerImage)
+    }
+}
+
+task test(dependsOn: model) {
+    doLast {
+        if(kubernetes.dockerImages.test != null) {
+            println 'Success'
+        }
+    }
+}
+"""
+        when:
+        succeeds 'test'
 
         then:
         result.output.contains 'Success'
