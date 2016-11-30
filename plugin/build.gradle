@@ -2,6 +2,7 @@ plugins {
     id 'java-gradle-plugin'
     id 'groovy'
     id 'maven-publish'
+    id 'codenarc'
 }
 
 group = 'com.github.kolleroot.gradle'
@@ -26,6 +27,14 @@ gradlePlugin {
     }
 }
 
+codenarcMain {
+    configFile file("${rootDir}/config/codenarc/codenarc-main.rules")
+}
+
+codenarcTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -37,3 +46,4 @@ publishing {
         }
     }
 }
+

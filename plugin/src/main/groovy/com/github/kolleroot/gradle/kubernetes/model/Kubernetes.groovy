@@ -24,7 +24,7 @@ class DefaultKubernetes implements Kubernetes {
 
     @Override
     DockerImageContainer getDockerImages() {
-        return dockerImages
+        dockerImages
     }
 
     @Override

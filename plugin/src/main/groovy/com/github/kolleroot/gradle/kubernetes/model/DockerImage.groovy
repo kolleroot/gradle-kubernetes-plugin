@@ -4,13 +4,17 @@ import org.gradle.api.Named
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.internal.reflect.Instantiator
 
-interface DockerImage extends Named {}
+/**
+ * The base interface for docker images
+ */
+interface DockerImage extends Named {
+}
 
-abstract class DockerImageFactory<T extends DockerImage> implements NamedDomainObjectFactory<T> {
+class DockerImageFactory<T extends DockerImage> implements NamedDomainObjectFactory<T> {
     private final Instantiator instantiator
     private final Class<T> clazz
 
-    DockerImageFactory(Class<T> clazz, Instantiator instantiator) {
+    protected DockerImageFactory(Class<T> clazz, Instantiator instantiator) {
         this.clazz = clazz
         this.instantiator = instantiator
     }
