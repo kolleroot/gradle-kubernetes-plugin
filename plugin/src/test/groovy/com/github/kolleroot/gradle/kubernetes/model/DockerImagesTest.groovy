@@ -7,7 +7,7 @@ import spock.lang.Specification
  * Test the docker images model
  */
 class DockerImagesTest extends Specification {
-    def Kubernetes kubernetes
+    Kubernetes kubernetes
 
     def setup() {
         kubernetes = new DefaultKubernetes(DirectInstantiator.INSTANCE)

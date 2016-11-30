@@ -16,10 +16,10 @@ import javax.inject.Inject
  *
  * It will apply all the extensions to the project and generate the required tasks
  */
-@SuppressWarnings("GroovyUnusedDeclaration")
+@SuppressWarnings('GroovyUnusedDeclaration')
 class KubernetesPlugin implements Plugin<Project> {
 
-    private static final def KUBERNETES_EXTENSION_NAME = 'kubernetes'
+    private static final String KUBERNETES_EXTENSION_NAME = 'kubernetes'
 
     private final Instantiator instantiator
 
@@ -33,13 +33,13 @@ class KubernetesPlugin implements Plugin<Project> {
         project.extensions.create KUBERNETES_EXTENSION_NAME, DefaultKubernetes, instantiator
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration")
+    @SuppressWarnings('GroovyUnusedDeclaration')
     static class Rules extends RuleSource {
 
-        @SuppressWarnings("GrMethodMayBeStatic")
+        @SuppressWarnings('GrMethodMayBeStatic')
         @Model
         Kubernetes kubernetes(ExtensionContainer extensions) {
-            return extensions.findByType(Kubernetes)
+            extensions.findByType(Kubernetes)
         }
     }
 }

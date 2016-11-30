@@ -19,7 +19,7 @@ class RulesTest extends Specification {
     BuildResult result
 
     void setup() {
-        buildFile = buildFolder.newFile("build.gradle")
+        buildFile = buildFolder.newFile('build.gradle')
     }
 
     private void succeeds(String arguments) {
@@ -54,7 +54,7 @@ task test(dependsOn: model) {
         result.output.contains 'Success'
     }
 
-    def "create docker image"() {
+    def "create a test docker image"() {
         given:
         buildFile << """
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
