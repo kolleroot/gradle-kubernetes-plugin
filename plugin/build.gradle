@@ -12,10 +12,13 @@ dependencies {
     compile localGroovy()
     compile gradleApi()
 
+    compile 'com.bmuschko:gradle-docker-plugin:3.0.3'
+
     testCompile gradleTestKit()
     testCompile "junit:junit:${libraryVersions.junit}"
-    testCompile "org.codehaus.groovy:groovy-all:${libraryVersions.groovyAll}"
-    testCompile "org.spockframework:spock-core:${libraryVersions.spock}"
+    testCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
+        exclude group: 'org.codehaus.groovy'
+    }
 }
 
 gradlePlugin {
