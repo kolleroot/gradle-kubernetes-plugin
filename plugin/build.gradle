@@ -24,7 +24,7 @@ dependencies {
 gradlePlugin {
     plugins {
         kubernetesDeploymentPlugin {
-            id = 'com.gradle.kolleroot.gradle.kubernetes'
+            id = 'com.github.kolleroot.gradle.kubernetes'
             implementationClass = 'com.github.kolleroot.gradle.kubernetes.KubernetesPlugin'
         }
     }

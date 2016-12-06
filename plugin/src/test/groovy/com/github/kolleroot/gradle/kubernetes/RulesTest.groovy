@@ -1,9 +1,10 @@
 package com.github.kolleroot.gradle.kubernetes
 
-import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
+import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
+import com.github.kolleroot.gradle.kubernetes.model.DockerImage
+import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
+import org.gradle.api.Project
+import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
 /**
@@ -11,76 +12,82 @@ import spock.lang.Specification
  */
 class RulesTest extends Specification {
 
-    @Rule
-    TemporaryFolder buildFolder = new TemporaryFolder()
-
-    File buildFile
-
-    BuildResult result
+    Project project
 
     void setup() {
-        buildFile = buildFolder.newFile('build.gradle')
+        project = ProjectBuilder.builder().build()
     }
 
-    private void succeeds(String arguments) {
-        result = GradleRunner
-                .create()
-                .withDebug(true)
-                .withProjectDir(buildFolder.root)
-                .withPluginClasspath()
-                .withArguments(arguments)
-                .build()
+    private Kubernetes kubernetesFromModel() {
+        project.modelRegistry.find('kubernetes', Kubernetes)
     }
 
-    def "register the kubernetes extension"() {
-        given:
-        buildFile << """
-plugins {
-    id 'com.gradle.kolleroot.gradle.kubernetes'
-}
-
-task test(dependsOn: model) {
-    doLast {
-        if(kubernetes != null) {
-            println 'Success'
+    def 'no default docker images'() {
+        given: 'the default model'
+        project.allprojects {
+            apply plugin: KubernetesPlugin
         }
-    }
-}
-"""
+
         when:
-        succeeds 'test'
+        def kubernetes = kubernetesFromModel()
 
         then:
-        result.output.contains 'Success'
+        kubernetes.dockerImages.size() == 0
     }
 
-    def "create a test docker image"() {
+    def 'a simple docker image'() {
         given:
-        buildFile << """
-import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
+        project.allprojects {
+            apply plugin: KubernetesPlugin
 
-plugins {
-    id 'com.gradle.kolleroot.gradle.kubernetes'
-}
-
-kubernetes {
-    dockerImages {
-        test(DefaultDockerImage)
-    }
-}
-
-task test(dependsOn: model) {
-    doLast {
-        if(kubernetes.dockerImages.test != null) {
-            println 'Success'
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage)
+                    }
+                }
+            }
         }
-    }
-}
-"""
+        project
         when:
-        succeeds 'test'
+        def kubernetes = kubernetesFromModel()
+        def dockerImage = kubernetes.dockerImages['simpleImage']
 
         then:
-        result.output.contains 'Success'
+        kubernetes.dockerImages.size() == 1
+        dockerImage != null
+    }
+
+    def 'docker image with basic instructions'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            from 'openjdk'
+                            maintainer 'Stefan Kollmann <kolle.root@yahoo.de>'
+                            runCommand 'cp a.class b.class'
+                            defaultCommand 'java a'
+                        }
+                    }
+                }
+            }
+        }
+        project
+        when:
+        def kubernetes = kubernetesFromModel()
+        DockerImage dockerImage = kubernetes.dockerImages['simpleImage']
+
+        then:
+        kubernetes.dockerImages.size() == 1
+        dockerImage != null
+
+        dockerImage.instructions[0] == 'FROM openjdk'
+        dockerImage.instructions[1] == 'MAINTAINER Stefan Kollmann <kolle.root@yahoo.de>'
+        dockerImage.instructions[2] == 'RUN cp a.class b.class'
+        dockerImage.instructions[3] == 'CMD ["java a"]'
     }
 }
