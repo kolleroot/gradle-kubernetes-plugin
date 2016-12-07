@@ -4,6 +4,7 @@ import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import org.gradle.api.Project
+import org.gradle.model.internal.core.ModelRuleExecutionException
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
@@ -22,7 +23,7 @@ class RulesTest extends Specification {
         project.modelRegistry.find('kubernetes', Kubernetes)
     }
 
-    def 'no default docker images'() {
+    def 'docker image no default'() {
         given: 'the default model'
         project.allprojects {
             apply plugin: KubernetesPlugin
@@ -35,7 +36,7 @@ class RulesTest extends Specification {
         kubernetes.dockerImages.size() == 0
     }
 
-    def 'a simple docker image'() {
+    def 'docker image simpleImage'() {
         given:
         project.allprojects {
             apply plugin: KubernetesPlugin
@@ -43,12 +44,14 @@ class RulesTest extends Specification {
             model {
                 kubernetes {
                     dockerImages {
-                        simpleImage(DefaultDockerImage)
+                        simpleImage(DefaultDockerImage) {
+                            from 'nothing'
+                        }
                     }
                 }
             }
         }
-        project
+
         when:
         def kubernetes = kubernetesFromModel()
         def dockerImage = kubernetes.dockerImages['simpleImage']
@@ -76,7 +79,7 @@ class RulesTest extends Specification {
                 }
             }
         }
-        project
+
         when:
         def kubernetes = kubernetesFromModel()
         DockerImage dockerImage = kubernetes.dockerImages['simpleImage']
@@ -89,5 +92,53 @@ class RulesTest extends Specification {
         dockerImage.instructions[1] == 'MAINTAINER Stefan Kollmann <kolle.root@yahoo.de>'
         dockerImage.instructions[2] == 'RUN cp a.class b.class'
         dockerImage.instructions[3] == 'CMD ["java a"]'
+    }
+
+    def 'docker image verify not empty instruction'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage)
+                    }
+                }
+            }
+        }
+
+        when:
+        kubernetesFromModel()
+
+        then:
+        ModelRuleExecutionException e = thrown()
+
+        e.cause.message.contains 'The list of instructions MUST not be empty. There must be at least one FROM instruction.'
+    }
+
+    def 'docker image verify FROM first'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            maintainer 'Stefan Kollmann <kolle.root@yahoo.de>'
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        kubernetesFromModel()
+
+        then:
+        ModelRuleExecutionException e = thrown()
+
+        e.cause.message.contains 'The list of instructions must start with an FROM instruction.'
     }
 }
