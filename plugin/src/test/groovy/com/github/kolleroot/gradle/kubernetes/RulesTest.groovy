@@ -1,9 +1,11 @@
 package com.github.kolleroot.gradle.kubernetes
 
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import org.gradle.api.Project
+import org.gradle.api.tasks.TaskContainer
 import org.gradle.model.internal.core.ModelRuleExecutionException
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
@@ -21,6 +23,10 @@ class RulesTest extends Specification {
 
     private Kubernetes kubernetesFromModel() {
         project.modelRegistry.find('kubernetes', Kubernetes)
+    }
+
+    private TaskContainer tasksFromModel() {
+        project.modelRegistry.find('tasks', TaskContainer)
     }
 
     def 'docker image no default'() {
@@ -155,5 +161,31 @@ class RulesTest extends Specification {
         ModelRuleExecutionException e = thrown()
 
         e.cause.message.contains 'The list of instructions must start with an FROM instruction.'
+    }
+
+    def 'docker image Dockerfile task per image'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            from 'nothing'
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        def tasks = tasksFromModel()
+
+        then:
+        def task = tasks.findByName('kubernetesDockerfileSimpleImage')
+        task instanceof Dockerfile
+
+        (task as Dockerfile).instructions.size() > 0
     }
 }
