@@ -5,10 +5,8 @@ import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.model.Each
-import org.gradle.model.Model
-import org.gradle.model.RuleSource
-import org.gradle.model.Validate
+import org.gradle.api.Task
+import org.gradle.model.*
 
 /**
  * This is the main kubernetes plugin.
@@ -17,6 +15,8 @@ import org.gradle.model.Validate
  */
 @SuppressWarnings('GroovyUnusedDeclaration')
 class KubernetesPlugin implements Plugin<Project> {
+
+    static final String KUBERNETES_GROUP = 'Kubernetes'
 
     @Override
     void apply(Project project) {
@@ -40,18 +40,33 @@ class KubernetesPlugin implements Plugin<Project> {
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
+        @Defaults
+        void createDefaultDockerfileTask(ModelMap<Task> tasks) {
+            tasks.create('kubernetesDockerfiles', {
+                group = KUBERNETES_GROUP
+                description = 'Create all Dockerfiles for the images'
+            })
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
         @Mutate
         void createDockerFileTask(ModelMap<Task> tasks,
+                                  @Path('tasks.kubernetesDockerfiles') Task kubernetesDockerfiles,
                                   @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerImages.each {
                 dockerImage ->
                     def taskName = "kubernetesDockerfile${dockerImage.name.capitalize()}"
                     tasks.create(taskName, Dockerfile, {
+                        group = KUBERNETES_GROUP
+                        description = "Create the Dockerfile for the image ${dockerImage.name}"
+
                         destFile = project.file("${project.buildDir}/kubernetes/dockerimages/${dockerImage.name}/Dockerfile")
                         dockerImage.instructions.each {
                             instructions << new Dockerfile.GenericInstruction(it)
                         }
                     })
+
+                    kubernetesDockerfiles.dependsOn tasks.get(taskName)
             }
         }
     }

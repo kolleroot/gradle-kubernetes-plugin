@@ -163,6 +163,22 @@ class RulesTest extends Specification {
         e.cause.message.contains 'The list of instructions must start with an FROM instruction.'
     }
 
+    def 'docker image Dockerfile summary task'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+        }
+
+        when:
+        def tasks = tasksFromModel()
+
+        then:
+        def summaryTask = tasks.getByName('kubernetesDockerfiles')
+        summaryTask != null
+        summaryTask.group == 'Kubernetes'
+        summaryTask.description == 'Create all Dockerfiles for the images'
+    }
+
     def 'docker image Dockerfile task per image'() {
         given:
         project.allprojects {
@@ -186,6 +202,12 @@ class RulesTest extends Specification {
         def task = tasks.findByName('kubernetesDockerfileSimpleImage')
         task instanceof Dockerfile
 
+        task.description == 'Create the Dockerfile for the image simpleImage'
+        task.group == 'Kubernetes'
+
         (task as Dockerfile).instructions.size() > 0
+
+        def summaryTask = tasks.getByName('kubernetesDockerfiles')
+        summaryTask.dependsOn.contains task
     }
 }
