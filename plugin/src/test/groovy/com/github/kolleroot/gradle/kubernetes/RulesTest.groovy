@@ -61,7 +61,7 @@ class RulesTest extends Specification {
         dockerImage != null
     }
 
-    def 'docker image with basic instructions'() {
+    def 'docker image with basic instructions (most of the instructions)'() {
         given:
         project.allprojects {
             apply plugin: KubernetesPlugin
@@ -72,8 +72,14 @@ class RulesTest extends Specification {
                         simpleImage(DefaultDockerImage) {
                             from 'openjdk'
                             maintainer 'Stefan Kollmann <kolle.root@yahoo.de>'
+                            user 'admin'
+                            workingDir '/root'
                             runCommand 'cp a.class b.class'
-                            defaultCommand 'java a'
+                            entryPoint 'java', 'a'
+                            defaultCommand '--my-flag'
+                            exposePort 80, 443, 8080, 9990
+                            environmentVariable 'MY_PARAM', 'abc123'
+                            volume '/var/lib/myApp'
                         }
                     }
                 }
@@ -88,10 +94,18 @@ class RulesTest extends Specification {
         kubernetes.dockerImages.size() == 1
         dockerImage != null
 
-        dockerImage.instructions[0] == 'FROM openjdk'
-        dockerImage.instructions[1] == 'MAINTAINER Stefan Kollmann <kolle.root@yahoo.de>'
-        dockerImage.instructions[2] == 'RUN cp a.class b.class'
-        dockerImage.instructions[3] == 'CMD ["java a"]'
+        dockerImage.instructions.join('\n') == """
+            FROM openjdk
+            MAINTAINER Stefan Kollmann <kolle.root@yahoo.de>
+            USER admin
+            WORKDIR /root
+            RUN cp a.class b.class
+            ENTRYPOINT ["java", "a"]
+            CMD ["--my-flag"]
+            EXPOSE 80 443 8080 9990
+            ENV MY_PARAM abc123
+            VOLUME ["/var/lib/myApp"]
+""".stripIndent().trim()
     }
 
     def 'docker image verify not empty instruction'() {
@@ -114,7 +128,8 @@ class RulesTest extends Specification {
         then:
         ModelRuleExecutionException e = thrown()
 
-        e.cause.message.contains 'The list of instructions MUST not be empty. There must be at least one FROM instruction.'
+        e.cause.message.contains 'The list of instructions MUST not be empty. ' +
+                'There must be at least one FROM instruction.'
     }
 
     def 'docker image verify FROM first'() {
