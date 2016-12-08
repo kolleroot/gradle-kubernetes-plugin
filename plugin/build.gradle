@@ -5,6 +5,8 @@ plugins {
     id 'codenarc'
 }
 
+apply from: "${project.rootDir}/gradle/integTest.gradle"
+
 group = 'com.github.kolleroot.gradle'
 version = '0.1'
 
@@ -17,6 +19,12 @@ dependencies {
     testCompile gradleTestKit()
     testCompile "junit:junit:${libraryVersions.junit}"
     testCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
+        exclude group: 'org.codehaus.groovy'
+    }
+
+    integTestCompile gradleTestKit()
+    integTestCompile "junit:junit:${libraryVersions.junit}"
+    integTestCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
         exclude group: 'org.codehaus.groovy'
     }
 }
@@ -35,6 +43,10 @@ codenarcMain {
 }
 
 codenarcTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+codenarcIntegTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 
