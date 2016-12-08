@@ -210,4 +210,37 @@ class RulesTest extends Specification {
         def summaryTask = tasks.getByName('kubernetesDockerfiles')
         summaryTask.dependsOn.contains task
     }
+
+    def 'docker image add file spec'() {
+        given:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            from 'nothing'
+                            addFiles '/home/something/', {
+                                from 'test.txt'
+                            }
+                            addFiles '/home/something/', {
+                                from 'another-file.txt'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        def kubernetes = kubernetesFromModel()
+        DockerImage dockerImage = kubernetes.dockerImages['simpleImage'] as DockerImage
+
+        then:
+        dockerImage.instructions.contains 'ADD something-0.zip /home/something/'
+        dockerImage.bundles.size() == 2
+        dockerImage.bundles[0].bundleName == 'something-0.zip'
+        dockerImage.bundles[1].bundleName == 'something-1.zip'
+    }
 }

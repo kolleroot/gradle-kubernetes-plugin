@@ -1,19 +1,47 @@
 package com.github.kolleroot.gradle.kubernetes.model
 
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
+import org.gradle.api.Action
 import org.gradle.api.Named
+import org.gradle.api.file.CopySourceSpec
 import org.gradle.model.Managed
+import org.gradle.model.ModelSet
+import org.gradle.model.Unmanaged
 
 /**
- * The base interface for docker images
+ * The base interface for docker images source
+ *
+ * Each image consists of a list of instructions and a list of {@link FileBundle FileBundles}.
  */
 @Managed
 interface DockerImage extends Named {
     List<String> getInstructions()
+
+    ModelSet<FileBundle> getBundles()
 }
 
 /**
+ * A bundle of files relative to the project root and a name by which it will be referenced in the Dockerfile.
+ */
+@Managed
+interface FileBundle {
+    String getBundleName()
+
+    void setBundleName(String name)
+
+    @Unmanaged
+    Action<? extends CopySourceSpec> getSpec()
+
+    void setSpec(Action<? extends CopySourceSpec> spec)
+}
+
+/**
+ * Each function adds an instruction to the list of instructions.
+ *
  * These instructinos are from {@link com.bmuschko.gradle.docker.tasks.image.Dockerfile}
+ *
+ * @see com.bmuschko.gradle.docker.tasks.image.Dockerfile
  */
 @Managed
 @SuppressWarnings('AbstractClassWithoutAbstractMethod')
@@ -177,6 +205,16 @@ abstract class DefaultDockerImage implements DockerImage {
         instructions << new Dockerfile.EnvironmentVariableInstruction(key, value).build()
     }
 
+    void addFiles(String dest, Action<? extends CopySourceSpec> copySourceSpec) {
+        String name = "${dest.split('/').last()}-${DockerImageFileBundleCounter.nextUnique}.zip"
+
+        bundles.create {
+            bundleName = name
+            spec = copySourceSpec
+        }
+        instructions << new Dockerfile.AddFileInstruction(name, dest).build()
+    }
+
     /**
      * The <a href="https://docs.docker.com/reference/builder/#add">ADD instruction</a> copies new files, directories
      * or remote file URLs from <src> and adds them to the filesystem of the container at the path <dest>.
@@ -197,28 +235,6 @@ abstract class DefaultDockerImage implements DockerImage {
      */
     void addFile(Closure src, Closure dest) {
         instructions << new Dockerfile.AddFileInstruction(src, dest).build()
-    }
-
-    /**
-     * The <a href="https://docs.docker.com/reference/builder/#copy">COPY instruction</a> copies new files or
-     * directories from <src> and adds them to the filesystem of the container at the path <dest>.
-     *
-     * @param src Source file
-     * @param dest Destination path
-     */
-    void copyFile(String src, String dest) {
-        instructions << new Dockerfile.CopyFileInstruction(src, dest).build()
-    }
-
-    /**
-     * The <a href="https://docs.docker.com/reference/builder/#copy">COPY instruction</a> copies new files or
-     * directories from <src> and adds them to the filesystem of the container at the path <dest>.
-     *
-     * @param src Source file
-     * @param dest Destination path
-     */
-    void copyFile(Closure src, Closure dest) {
-        instructions << new Dockerfile.CopyFileInstruction(src, dest).build()
     }
 
     /**
