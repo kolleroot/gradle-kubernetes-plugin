@@ -205,8 +205,8 @@ abstract class DefaultDockerImage implements DockerImage {
 
     void addFiles(String dest, Closure copySpec) {
         String baseName
-        if(dest.split('/').size() > 0) {
-            baseName = dest.split('/').last()
+        if (dest.split(File.separator).size() > 0) {
+            baseName = dest.split(File.separator).last()
         } else {
             baseName = 'root'
         }

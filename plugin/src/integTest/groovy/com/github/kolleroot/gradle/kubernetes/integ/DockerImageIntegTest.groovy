@@ -2,13 +2,12 @@ package com.github.kolleroot.gradle.kubernetes.integ
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
+import com.github.kolleroot.gradle.kubernetes.integ.helper.ZipFileHelper
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
-
-import java.util.zip.ZipFile
 
 /**
  * Some integration testing for docker images
@@ -66,6 +65,9 @@ class DockerImageIntegTest extends Specification {
         buildFolder.newFolder('src/main/docker/simpleImage'.split(/\//))
         buildFolder.newFile('src/main/docker/simpleImage/test-file.txt') << TEST_TEXT_FILE
 
+        and:
+        def resultZipMap = ['test-file.txt': TEST_TEXT_FILE]
+
         when:
         succeeds 'kubernetesDockerfiles'
 
@@ -81,8 +83,8 @@ class DockerImageIntegTest extends Specification {
 
         def rootZip0 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/root-0.zip')
         rootZip0.exists()
-        Set<File> zipFiles = new ZipFile(rootZip0).findAll()
+        def zipMap = ZipFileHelper.toMap(rootZip0)
 
-        rootZip0.readLines().join('\n') == TEST_TEXT_FILE
+        zipMap == resultZipMap
     }
 }

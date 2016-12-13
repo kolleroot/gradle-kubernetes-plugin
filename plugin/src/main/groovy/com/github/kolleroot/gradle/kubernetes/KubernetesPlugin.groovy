@@ -2,9 +2,7 @@ package com.github.kolleroot.gradle.kubernetes
 
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
-import com.github.kolleroot.gradle.kubernetes.model.FileBundle
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
-import org.codehaus.groovy.runtime.ConvertedClosure
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -108,7 +106,8 @@ class KubernetesPlugin implements Plugin<Project> {
         }
 
         @Rules
-        void applyDockerImageRules(DockerImageRules rules, @Each DockerImage image) {}
+        void applyDockerImageRules(DockerImageRules rules, @Each DockerImage image) {
+        }
     }
 
     static class DockerImageRules extends RuleSource {
