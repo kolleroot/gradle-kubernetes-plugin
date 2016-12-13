@@ -5,6 +5,8 @@ plugins {
     id 'codenarc'
 }
 
+apply from: "${project.rootDir}/gradle/integTest.gradle"
+
 group = 'com.github.kolleroot.gradle'
 version = '0.1'
 
@@ -12,16 +14,25 @@ dependencies {
     compile localGroovy()
     compile gradleApi()
 
+    compile 'com.bmuschko:gradle-docker-plugin:3.0.3'
+
     testCompile gradleTestKit()
     testCompile "junit:junit:${libraryVersions.junit}"
-    testCompile "org.codehaus.groovy:groovy-all:${libraryVersions.groovyAll}"
-    testCompile "org.spockframework:spock-core:${libraryVersions.spock}"
+    testCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
+        exclude group: 'org.codehaus.groovy'
+    }
+
+    integTestCompile gradleTestKit()
+    integTestCompile "junit:junit:${libraryVersions.junit}"
+    integTestCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
+        exclude group: 'org.codehaus.groovy'
+    }
 }
 
 gradlePlugin {
     plugins {
         kubernetesDeploymentPlugin {
-            id = 'com.gradle.kolleroot.gradle.kubernetes'
+            id = 'com.github.kolleroot.gradle.kubernetes'
             implementationClass = 'com.github.kolleroot.gradle.kubernetes.KubernetesPlugin'
         }
     }
@@ -32,6 +43,10 @@ codenarcMain {
 }
 
 codenarcTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+codenarcIntegTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 

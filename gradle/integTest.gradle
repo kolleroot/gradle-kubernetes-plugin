@@ -1,0 +1,17 @@
+sourceSets {
+    integTest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task integTest(type: Test) {
+    testClassesDir = sourceSets.integTest.output.classesDir
+    classpath = sourceSets.integTest.runtimeClasspath
+}
+
+gradlePlugin {
+    testSourceSets sourceSets.integTest
+}
+
+check.dependsOn integTest
