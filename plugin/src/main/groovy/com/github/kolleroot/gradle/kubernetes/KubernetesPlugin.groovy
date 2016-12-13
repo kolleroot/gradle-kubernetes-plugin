@@ -14,7 +14,6 @@ import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
-import org.gradle.model.Rules
 import org.gradle.model.Validate
 
 import java.nio.file.Paths
@@ -44,10 +43,10 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Validate
         void checkDockerImageNotEmptyAndFrom(@Each DockerImage dockerImage) {
-            assert !dockerImage.instructions.empty: 'The list of instructions MUST not be empty. There must be at ' +
-                    'least one FROM instruction.'
-            assert dockerImage.instructions.first().startsWith('FROM '): 'The list of instructions must start with an' +
-                    ' FROM instruction.'
+            assert !dockerImage.instructions.empty: 'The list of instructions MUST not be empty. There must be at' +
+                    ' least one FROM instruction.'
+            assert dockerImage.instructions.first().startsWith('FROM '): 'The list of instructions must start ' +
+                    'with an FROM instruction.'
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
@@ -104,12 +103,5 @@ class KubernetesPlugin implements Plugin<Project> {
                     kubernetesDockerfiles.dependsOn dockerfileTask
             }
         }
-
-        @Rules
-        void applyDockerImageRules(DockerImageRules rules, @Each DockerImage image) {
-        }
-    }
-
-    static class DockerImageRules extends RuleSource {
     }
 }
