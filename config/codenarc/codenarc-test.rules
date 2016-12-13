@@ -340,7 +340,9 @@ ruleset {
     CyclomaticComplexity   // Requires the GMetrics jar
     MethodCount 
     MethodSize 
-    NestedBlockDepth 
+    NestedBlockDepth {
+        maxNestedBlockDepth = 6 // for the copy spec blocks in the tests
+    }
     ParameterCount 
     
     // rulesets/unnecessary.xml

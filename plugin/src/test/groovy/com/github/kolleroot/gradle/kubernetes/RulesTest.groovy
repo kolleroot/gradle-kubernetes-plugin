@@ -1,11 +1,14 @@
 package com.github.kolleroot.gradle.kubernetes
 
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.internal.core.ModelRuleExecutionException
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
@@ -242,5 +245,42 @@ class RulesTest extends Specification {
         dockerImage.bundles.size() == 2
         dockerImage.bundles[0].bundleName == 'something-0.zip'
         dockerImage.bundles[1].bundleName == 'something-1.zip'
+    }
+
+    def 'docker image create zip file tasks'() {
+        given:
+        def baseCounter = DockerImageFileBundleCounter.current
+
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            from 'nothing'
+                            addFiles '/home/something/', {
+                                from 'test.txt'
+                            }
+                            addFiles '/home/something/', {
+                                from 'another-file.txt'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        def tasks = tasksFromModel()
+        then:
+        Task something0 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter}")
+        Task something1 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter + 1}")
+
+        something0 instanceof Zip
+        something1 instanceof Zip
+
+        (something0 as Zip).archiveName == "something-${baseCounter}.zip".toString()
+        (something1 as Zip).archiveName == "something-${baseCounter + 1}.zip".toString()
     }
 }

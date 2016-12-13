@@ -2,9 +2,7 @@ package com.github.kolleroot.gradle.kubernetes.model
 
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
-import org.gradle.api.Action
 import org.gradle.api.Named
-import org.gradle.api.file.CopySourceSpec
 import org.gradle.model.Managed
 import org.gradle.model.ModelSet
 import org.gradle.model.Unmanaged
@@ -31,9 +29,9 @@ interface FileBundle {
     void setBundleName(String name)
 
     @Unmanaged
-    Action<? extends CopySourceSpec> getSpec()
+    Closure getSpec()
 
-    void setSpec(Action<? extends CopySourceSpec> spec)
+    void setSpec(Closure spec)
 }
 
 /**
@@ -205,13 +203,20 @@ abstract class DefaultDockerImage implements DockerImage {
         instructions << new Dockerfile.EnvironmentVariableInstruction(key, value).build()
     }
 
-    void addFiles(String dest, Action<? extends CopySourceSpec> copySourceSpec) {
-        String name = "${dest.split('/').last()}-${DockerImageFileBundleCounter.nextUnique}.zip"
+    void addFiles(String dest, Closure copySpec) {
+        String baseName
+        if(dest.split('/').size() > 0) {
+            baseName = dest.split('/').last()
+        } else {
+            baseName = 'root'
+        }
+        String name = "${baseName}-${DockerImageFileBundleCounter.nextUnique}.zip"
 
         bundles.create {
             bundleName = name
-            spec = copySourceSpec
+            spec = copySpec
         }
+
         instructions << new Dockerfile.AddFileInstruction(name, dest).build()
     }
 
