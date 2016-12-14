@@ -20,7 +20,9 @@ class ZipFileHelper {
         ZipFile zip = new ZipFile(file)
 
         zip.entries().each { entry ->
-            map.put(entry.name, zip.getInputStream(entry).readLines().join('\n'))
+            if (!entry.isDirectory()) {
+                map.put(entry.name, zip.getInputStream(entry).readLines().join('\n'))
+            }
         }
 
         map

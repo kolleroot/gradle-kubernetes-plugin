@@ -1,6 +1,8 @@
 package com.github.kolleroot.gradle.kubernetes
 
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import org.gradle.api.Plugin
@@ -28,8 +30,16 @@ class KubernetesPlugin implements Plugin<Project> {
 
     static final String KUBERNETES_GROUP = 'Kubernetes'
 
+    static final String KUBERNETES_DOCKERFILES_TASK = 'kubernetesDockerfiles'
+    static final String KUBERNETES_DOCKER_BUILD_IMAGES_TASK = 'kubernetesDockerBuildImages'
+
+    static final String KUBERNETES_DOCKERFILE_BASE = 'kubernetesDockerfile'
+    static final String KUBERNETES_DOCKER_BUILD_IMAGE_BASE = 'kubernetesDockerBuildImage'
+
     @Override
     void apply(Project project) {
+        // this is probably realy not the best way to do it, but ...
+        DockerImageFileBundleCounter.COUNTER.set(0)
     }
 
     @SuppressWarnings('GroovyUnusedDeclaration')
@@ -52,9 +62,18 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Defaults
         void addDefaultDockerfileTask(ModelMap<Task> tasks) {
-            tasks.create 'kubernetesDockerfiles', {
+            tasks.create KUBERNETES_DOCKERFILES_TASK, {
                 group = KUBERNETES_GROUP
                 description = 'Create all Dockerfiles for the images'
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Defaults
+        void addDefaultDockerBuildImageTask(ModelMap<Task> tasks) {
+            tasks.create KUBERNETES_DOCKER_BUILD_IMAGES_TASK, {
+                group = KUBERNETES_GROUP
+                description = 'Build all docker images'
             }
         }
 
@@ -62,45 +81,56 @@ class KubernetesPlugin implements Plugin<Project> {
         @Mutate
         void addDockerFileTask(ModelMap<Task> tasks,
                                @Path('tasks.kubernetesDockerfiles') Task kubernetesDockerfiles,
+                               @Path('tasks.kubernetesDockerBuildImages') Task kubernetesDockerBuildImages,
                                @Path('buildDir') File buildDir,
                                @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
-            dockerImages.each {
-                dockerImage ->
-                    String relativeDockerImagePath = "kubernetes/dockerimages/${dockerImage.name}"
+            dockerImages.each { dockerImage ->
+                String relativeDockerImagePath = "kubernetes/dockerimages/${dockerImage.name}"
 
-                    List<Task> zipTasks = []
-                    dockerImage.bundles.each { bundle ->
-                        String zipTaskName = "kubernetesDockerfile${dockerImage.name.capitalize()}" +
-                                "${bundle.bundleName.split(/\./)[0].replace('-', '').capitalize()}"
-                        tasks.create zipTaskName, Zip, {
-                            archiveName bundle.bundleName
-                            destinationDir Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
-                        }
-
-                        // apply the spec from the model to the zipTask
-                        Zip zipTask = tasks.get(zipTaskName) as Zip
-                        bundle.spec.delegate = zipTask
-                        bundle.spec.resolveStrategy = Closure.DELEGATE_FIRST
-                        bundle.spec.call()
-
-                        zipTasks << zipTask
+                List<Task> zipTasks = []
+                dockerImage.bundles.each { bundle ->
+                    String zipTaskName = KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize() +
+                            "${bundle.bundleName.split(/\./)[0].replace('-', '').capitalize()}"
+                    tasks.create zipTaskName, Zip, {
+                        archiveName bundle.bundleName
+                        destinationDir Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
                     }
 
-                    String dockerfileTaskName = "kubernetesDockerfile${dockerImage.name.capitalize()}"
-                    tasks.create dockerfileTaskName, Dockerfile, {
-                        group = KUBERNETES_GROUP
-                        description = "Create the Dockerfile for the image ${dockerImage.name}"
+                    // apply the spec from the model to the zipTask
+                    Zip zipTask = tasks.get(zipTaskName) as Zip
+                    bundle.spec.delegate = zipTask
+                    bundle.spec.resolveStrategy = Closure.DELEGATE_FIRST
+                    bundle.spec.call()
 
-                        destFile = Paths.get(buildDir.toString(), relativeDockerImagePath, 'Dockerfile').toFile()
-                        dockerImage.instructions.each {
-                            instructions << new Dockerfile.GenericInstruction(it)
-                        }
+                    zipTasks << zipTask
+                }
+
+                String dockerfileTaskName = KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize()
+                tasks.create dockerfileTaskName, Dockerfile, {
+                    group = KUBERNETES_GROUP
+                    description = "Create the Dockerfile for the image ${dockerImage.name}"
+
+                    destFile = Paths.get(buildDir.toString(), relativeDockerImagePath, 'Dockerfile').toFile()
+                    dockerImage.instructions.each {
+                        instructions << new Dockerfile.GenericInstruction(it)
                     }
+                }
 
-                    Task dockerfileTask = tasks.get(dockerfileTaskName)
-                    dockerfileTask.dependsOn zipTasks
+                Dockerfile dockerfileTask = tasks.get(dockerfileTaskName) as Dockerfile
+                kubernetesDockerfiles.dependsOn dockerfileTask
 
-                    kubernetesDockerfiles.dependsOn dockerfileTask
+                String dockerBuildImageTaskName = KUBERNETES_DOCKER_BUILD_IMAGE_BASE + dockerImage.name.capitalize()
+                tasks.create dockerBuildImageTaskName, DockerBuildImage, {
+                    group = KUBERNETES_GROUP
+                    description = "Create the docker image from the Dockerfile for the image ${dockerImage.name}"
+
+                    dockerFile = dockerfileTask.destFile
+                    inputDir = Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
+                    inputs.files zipTasks
+                }
+
+                DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
+                kubernetesDockerBuildImages.dependsOn buildImageTask
             }
         }
     }

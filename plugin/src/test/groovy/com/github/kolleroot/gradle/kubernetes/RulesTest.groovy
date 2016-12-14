@@ -1,7 +1,7 @@
 package com.github.kolleroot.gradle.kubernetes
 
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
@@ -10,6 +10,7 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.internal.core.ModelRuleExecutionException
+import org.gradle.model.internal.registry.ModelRegistry
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
@@ -25,11 +26,11 @@ class RulesTest extends Specification {
     }
 
     private Kubernetes kubernetesFromModel() {
-        project.modelRegistry.find('kubernetes', Kubernetes)
+        (project.modelRegistry as ModelRegistry).find('kubernetes', Kubernetes) as Kubernetes
     }
 
     private TaskContainer tasksFromModel() {
-        project.modelRegistry.find('tasks', TaskContainer)
+        (project.modelRegistry as ModelRegistry).find('tasks', TaskContainer) as TaskContainer
     }
 
     def 'docker image no default'() {
@@ -97,7 +98,7 @@ class RulesTest extends Specification {
 
         when:
         def kubernetes = kubernetesFromModel()
-        DockerImage dockerImage = kubernetes.dockerImages['simpleImage']
+        DockerImage dockerImage = kubernetes.dockerImages['simpleImage'] as DockerImage
 
         then:
         kubernetes.dockerImages.size() == 1
@@ -249,8 +250,9 @@ class RulesTest extends Specification {
 
     def 'docker image create zip file tasks'() {
         given:
-        def baseCounter = DockerImageFileBundleCounter.current
+        def baseCounter = 0
 
+        and:
         project.allprojects {
             apply plugin: KubernetesPlugin
 
@@ -273,6 +275,7 @@ class RulesTest extends Specification {
 
         when:
         def tasks = tasksFromModel()
+
         then:
         Task something0 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter}")
         Task something1 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter + 1}")
@@ -282,5 +285,57 @@ class RulesTest extends Specification {
 
         (something0 as Zip).archiveName == "something-${baseCounter}.zip".toString()
         (something1 as Zip).archiveName == "something-${baseCounter + 1}.zip".toString()
+    }
+
+    def 'docker image build depends on docker file and zip files'() {
+        given:
+        def baseCounter = 0
+
+        and:
+        project.allprojects {
+            apply plugin: KubernetesPlugin
+
+            model {
+                kubernetes {
+                    dockerImages {
+                        simpleImage(DefaultDockerImage) {
+                            from 'nothing'
+
+                            addFiles '/', {
+                                from 'some-file.txt'
+                            }
+
+                            addFiles '/home', {
+                                from '.bashrc'
+                                into 'a'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        when:
+        def tasks = tasksFromModel()
+
+        then:
+        Dockerfile dockerfileSimpleImage = tasks.findByName('kubernetesDockerfileSimpleImage') as Dockerfile
+        Zip dockerfileSimpleImageRoot0 = tasks.findByName("kubernetesDockerfileSimpleImageRoot${baseCounter}") as Zip
+        Zip dockerfileSimpleImageHome1 =
+                tasks.findByName("kubernetesDockerfileSimpleImageHome${baseCounter + 1}") as Zip
+        Task dockerBuildImageTask = tasks.findByName('kubernetesDockerBuildImageSimpleImage')
+        Task dockerBuildImagesTask = tasks.findByName('kubernetesDockerBuildImages')
+
+        dockerBuildImageTask instanceof DockerBuildImage
+
+        dockerBuildImageTask.inputs.files.toList() ==
+                [
+                        dockerfileSimpleImage.destFile,
+                        dockerfileSimpleImageRoot0.archivePath,
+                        dockerfileSimpleImageHome1.archivePath,
+                ]
+
+        // depend on collective build images task
+        dockerBuildImagesTask.dependsOn.contains dockerBuildImageTask
     }
 }
