@@ -6,6 +6,7 @@ plugins {
 }
 
 apply from: "${project.rootDir}/gradle/integTest.gradle"
+apply from: "${project.rootDir}/gradle/funcTest.gradle"
 
 group = 'com.github.kolleroot.gradle'
 version = '0.1'

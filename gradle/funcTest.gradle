@@ -1,35 +1,35 @@
 sourceSets {
-    integTest {
+    funcTest {
         compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 }
 
-task integTest(type: Test) {
+task funcTest(type: Test) {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
-    description = 'Runs the integration tests.'
+    description = 'Runs the functional tests.'
 
-    testClassesDir = sourceSets.integTest.output.classesDir
-    classpath = sourceSets.integTest.runtimeClasspath
+    testClassesDir = sourceSets.funcTest.output.classesDir
+    classpath = sourceSets.funcTest.runtimeClasspath
 }
 
 gradlePlugin {
-    testSourceSets sourceSets.integTest
+    testSourceSets sourceSets.funcTest
 }
 
-check.dependsOn integTest
+check.dependsOn funcTest
 
 gradle.projectsEvaluated {
     def quickTasks = []
 
     gradle.rootProject.allprojects.each { project ->
-        quickTasks.addAll(project.tasks.findAll { it.name == 'test' })
+        quickTasks.addAll(project.tasks.findAll { it.name == 'test' || it.name == 'integTest' })
         quickTasks.addAll(project.tasks.withType(FindBugs))
         quickTasks.addAll(project.tasks.withType(Pmd))
         quickTasks.addAll(project.tasks.withType(CodeNarc))
     }
 
     quickTasks.each { task ->
-        project.tasks.integTest.shouldRunAfter task
+        project.tasks.funcTask.shouldRunAfter task
     }
 }
