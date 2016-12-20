@@ -1,5 +1,6 @@
 package com.github.kolleroot.gradle.kubernetes
 
+import com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
@@ -38,6 +39,8 @@ class KubernetesPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+        project.apply plugin: DockerRemoteApiPlugin
+
         // this is probably realy not the best way to do it, but ...
         DockerImageFileBundleCounter.COUNTER.set(0)
     }
@@ -70,7 +73,7 @@ class KubernetesPlugin implements Plugin<Project> {
 
         @SuppressWarnings('GrMethodMayBeStatic')
         @Defaults
-        void addDefaultDockerBuildImageTask(ModelMap<Task> tasks) {
+        void addDefaultDockerBuildImagesTask(ModelMap<Task> tasks) {
             tasks.create KUBERNETES_DOCKER_BUILD_IMAGES_TASK, {
                 group = KUBERNETES_GROUP
                 description = 'Build all docker images'
@@ -126,11 +129,14 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     dockerFile = dockerfileTask.destFile
                     inputDir = Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
-                    inputs.files zipTasks
+
+                    tag = dockerImage.name
+
+                    inputs.files dockerfileTask, zipTasks
                 }
 
-                DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
-                kubernetesDockerBuildImages.dependsOn buildImageTask
+                 DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
+                 kubernetesDockerBuildImages.dependsOn buildImageTask
             }
         }
     }

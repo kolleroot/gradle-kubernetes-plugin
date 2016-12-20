@@ -1,6 +1,6 @@
 sourceSets {
     funcTest {
-        compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath + sourceSets.testBase.runtimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 }
@@ -14,7 +14,7 @@ task funcTest(type: Test) {
 }
 
 gradlePlugin {
-    testSourceSets sourceSets.funcTest
+    testSourceSets(*(testSourceSets as List), sourceSets.funcTest)
 }
 
 check.dependsOn funcTest
@@ -30,6 +30,8 @@ gradle.projectsEvaluated {
     }
 
     quickTasks.each { task ->
-        project.tasks.funcTask.shouldRunAfter task
+        project.tasks.funcTest.shouldRunAfter task
     }
 }
+
+apply from: "${rootDir}/gradle/vagrant.gradle"

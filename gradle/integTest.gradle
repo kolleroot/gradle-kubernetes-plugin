@@ -1,6 +1,6 @@
 sourceSets {
     integTest {
-        compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+        compileClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath + sourceSets.testBase.runtimeClasspath
         runtimeClasspath += output + compileClasspath
     }
 }
@@ -14,7 +14,7 @@ task integTest(type: Test) {
 }
 
 gradlePlugin {
-    testSourceSets sourceSets.integTest
+    testSourceSets(*(testSourceSets as List), sourceSets.integTest)
 }
 
 check.dependsOn integTest

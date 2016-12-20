@@ -3,16 +3,12 @@ package com.github.kolleroot.gradle.kubernetes.integ
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 import com.github.kolleroot.gradle.kubernetes.integ.helper.ZipFileHelper
-import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
-import spock.lang.Specification
+import com.github.kolleroot.gradle.kubernetes.testbase.GradleSpecification
 
 /**
  * Some integration testing for docker images
  */
-class DockerImageIntegTest extends Specification {
+class DockerImageIntegTest extends GradleSpecification {
 
     private static final String TEST_TEXT_FILE = '''
         Hello World!
@@ -26,28 +22,6 @@ class DockerImageIntegTest extends Specification {
     private static final String USER_B_HOME = '''
         Another file in user Bs home
         '''.stripIndent().trim()
-
-    @Rule
-    TemporaryFolder buildFolder = new TemporaryFolder()
-
-    File buildFile
-
-    BuildResult buildResult
-
-    private void succeeds(String... tasks) {
-        def args = tasks as List<String>
-        args << '--stacktrace'
-        buildResult = GradleRunner.create()
-                .withProjectDir(buildFolder.root)
-                .withDebug(true)
-                .withPluginClasspath()
-                .withArguments(tasks)
-                .build()
-    }
-
-    def setup() {
-        buildFile = buildFolder.newFile('build.gradle')
-    }
 
     def 'Dockerfile task creates the Dockerfile'() {
         given:
