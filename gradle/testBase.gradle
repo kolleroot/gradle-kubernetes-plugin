@@ -1,0 +1,10 @@
+sourceSets {
+    testBase {
+        runtimeClasspath += compileClasspath
+    }
+
+    test {
+        compileClasspath += sourceSets.testBase.compileClasspath
+        runtimeClasspath += sourceSets.testBase.runtimeClasspath
+    }
+}

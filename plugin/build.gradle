@@ -5,7 +5,9 @@ plugins {
     id 'codenarc'
 }
 
+apply from: "${project.rootDir}/gradle/testBase.gradle"
 apply from: "${project.rootDir}/gradle/integTest.gradle"
+apply from: "${project.rootDir}/gradle/funcTest.gradle"
 
 group = 'com.github.kolleroot.gradle'
 version = '0.1'
@@ -16,17 +18,13 @@ dependencies {
 
     compile 'com.bmuschko:gradle-docker-plugin:3.0.3'
 
-    testCompile gradleTestKit()
-    testCompile "junit:junit:${libraryVersions.junit}"
-    testCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
+    testBaseCompile gradleTestKit()
+    testBaseCompile "junit:junit:${libraryVersions.junit}"
+    testBaseCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
         exclude group: 'org.codehaus.groovy'
     }
 
-    integTestCompile gradleTestKit()
-    integTestCompile "junit:junit:${libraryVersions.junit}"
-    integTestCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
-        exclude group: 'org.codehaus.groovy'
-    }
+    funcTestCompile "com.github.docker-java:docker-java:3.0.6"
 }
 
 gradlePlugin {
@@ -42,11 +40,19 @@ codenarcMain {
     configFile file("${rootDir}/config/codenarc/codenarc-main.rules")
 }
 
+codenarcTestBase {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
 codenarcTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 
 codenarcIntegTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+codenarcFuncTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 
@@ -61,4 +67,3 @@ publishing {
         }
     }
 }
-
