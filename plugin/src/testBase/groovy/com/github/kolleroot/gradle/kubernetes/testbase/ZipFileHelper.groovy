@@ -1,4 +1,4 @@
-package com.github.kolleroot.gradle.kubernetes.integ.helper
+package com.github.kolleroot.gradle.kubernetes.testbase
 
 import java.util.zip.ZipFile
 

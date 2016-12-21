@@ -135,8 +135,8 @@ class KubernetesPlugin implements Plugin<Project> {
                     inputs.files dockerfileTask, zipTasks
                 }
 
-                 DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
-                 kubernetesDockerBuildImages.dependsOn buildImageTask
+                DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
+                kubernetesDockerBuildImages.dependsOn buildImageTask
             }
         }
     }
