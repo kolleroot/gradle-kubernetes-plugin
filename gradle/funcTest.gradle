@@ -34,4 +34,4 @@ gradle.projectsEvaluated {
     }
 }
 
-apply from: "${rootDir}/gradle/vagrant.gradle"
+// apply from: "${rootDir}/gradle/vagrant.gradle"
