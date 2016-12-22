@@ -1,22 +1,29 @@
-package com.github.kolleroot.gradle.kubernetes.func
+package com.github.kolleroot.gradle.kubernetes.integ
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
+import com.github.kolleroot.gradle.kubernetes.testbase.DockerHelper
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleSpecification
 import spock.lang.Shared
 
 /**
- * Created by stefan on 19.12.16.
+ * Specify the docker part
+ *
+ * Everyone must do his own cleanup
  */
 class CreateDockerImageSpec extends GradleSpecification {
+
+    static final String IMAGE_NAME = 'simple'
+    static final String IMAGE_ID = IMAGE_NAME + ':latest'
 
     @Shared
     DockerClient dockerClient
 
     def setupSpec() {
         def config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost('tcp://localhost:2375')
+                .withDockerHost(DockerHelper.url)
                 .build()
 
         dockerClient = DockerClientBuilder.getInstance(config)
@@ -30,16 +37,6 @@ class CreateDockerImageSpec extends GradleSpecification {
     def setup() {
         assert dockerClient != null
         dockerClient.pingCmd().exec()
-    }
-
-    def cleanup() {
-        dockerClient.listContainersCmd().exec().each { container ->
-            dockerClient.removeContainerCmd(container.id)
-        }
-
-        dockerClient.listImagesCmd().exec().each { image ->
-            dockerClient.removeImageCmd(image.id)
-        }
     }
 
     def "build a simple docker image"() {
@@ -56,14 +53,19 @@ class CreateDockerImageSpec extends GradleSpecification {
         }
 
         docker {
-            url = "http://localhost:2375"
+            url = "$DockerHelper.url"
         }
 
         model {
             kubernetes {
                 dockerImages {
-                    simple(DefaultDockerImage) {
+                    $IMAGE_NAME(DefaultDockerImage) {
                         from 'openjdk:8-jdk-alpine'
+
+                        maintainer 'Stefan Kollmann <kolle.root@yahoo.de>'
+                        defaultCommand 'java -version'
+
+                        exposePort 80
                     }
                 }
             }
@@ -73,9 +75,18 @@ class CreateDockerImageSpec extends GradleSpecification {
         when: 'the docker build task ran'
         succeeds 'kubernetesDockerBuildImageSimple'
 
+        and: 'got image details'
+        def imageDetails = dockerClient.inspectImageCmd('simple:latest').exec()
+
         then: 'the host has a docker image with tag simple:latest'
-        dockerClient.listImagesCmd().exec().any { image ->
-            image.repoTags.contains 'simple:latest'
-        }
+        imageDetails != null
+        imageDetails.repoTags.contains IMAGE_ID
+
+        imageDetails.author == 'Stefan Kollmann <kolle.root@yahoo.de>'
+        imageDetails.config.cmd.join(' ') == 'java -version'
+        imageDetails.config.exposedPorts as List == [new ExposedPort(80)]
+
+        cleanup: 'delete the created image'
+        dockerClient.removeImageCmd(IMAGE_ID).exec()
     }
 }

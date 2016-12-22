@@ -7,7 +7,6 @@ plugins {
 
 apply from: "${project.rootDir}/gradle/testBase.gradle"
 apply from: "${project.rootDir}/gradle/integTest.gradle"
-apply from: "${project.rootDir}/gradle/funcTest.gradle"
 
 group = 'com.github.kolleroot.gradle'
 version = '0.1'
@@ -24,7 +23,7 @@ dependencies {
         exclude group: 'org.codehaus.groovy'
     }
 
-    funcTestCompile "com.github.docker-java:docker-java:3.0.6"
+    integTestCompile "com.github.docker-java:docker-java:3.0.6"
 }
 
 gradlePlugin {
@@ -49,10 +48,6 @@ codenarcTest {
 }
 
 codenarcIntegTest {
-    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
-}
-
-codenarcFuncTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 

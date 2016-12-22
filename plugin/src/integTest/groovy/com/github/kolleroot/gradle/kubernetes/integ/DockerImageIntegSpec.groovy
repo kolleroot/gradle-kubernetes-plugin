@@ -2,13 +2,13 @@ package com.github.kolleroot.gradle.kubernetes.integ
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
-import com.github.kolleroot.gradle.kubernetes.integ.helper.ZipFileHelper
+import com.github.kolleroot.gradle.kubernetes.testbase.ZipFileHelper
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleSpecification
 
 /**
  * Some integration testing for docker images
  */
-class DockerImageIntegTest extends GradleSpecification {
+class DockerImageIntegSpec extends GradleSpecification {
 
     private static final String TEST_TEXT_FILE = '''
         Hello World!
