@@ -16,6 +16,7 @@ dependencies {
     compile gradleApi()
 
     compile 'com.bmuschko:gradle-docker-plugin:3.0.3'
+    compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
 
     testBaseCompile gradleTestKit()
     testBaseCompile "junit:junit:${libraryVersions.junit}"
