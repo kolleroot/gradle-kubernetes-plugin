@@ -1,4 +1,4 @@
-package com.github.kolleroot.gradle.kubernetes.func
+package com.github.kolleroot.gradle.kubernetes.integ
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.ExposedPort
