@@ -6,6 +6,9 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
+import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
+import com.github.kolleroot.gradle.kubernetes.task.KubernetesClosePortForwardTask
+import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -77,6 +80,31 @@ class KubernetesPlugin implements Plugin<Project> {
             tasks.create KUBERNETES_DOCKER_BUILD_IMAGES_TASK, {
                 group = KUBERNETES_GROUP
                 description = 'Build all docker images'
+            }
+        }
+
+        @Mutate
+        void addDockerRegistryTasks(ModelMap<Task> tasks,
+                                    @Path('kubernetes.dockerRegistries') ModelMap<KubernetesLocalDockerRegistry>
+                                            registries
+        ) {
+            registries.each { registry ->
+                String openTaskName = 'openKubeLocalDockerRegistry' +
+                        "${registry.namespace.capitalize()}${registry.pod.capitalize()}${registry.port}"
+                String closeTaskName = 'closeKubeLocalDockerRegistry' +
+                        "${registry.namespace.capitalize()}${registry.pod.capitalize()}${registry.port}"
+
+                tasks.create openTaskName, KubernetesOpenPortForwardTask, {
+                    forwardNamespace = registry.namespace
+                    forwardPod = registry.pod
+                    forwartPort = registry.port
+                }
+
+                KubernetesOpenPortForwardTask openTask = tasks.get(openTaskName) as KubernetesOpenPortForwardTask
+
+                tasks.create closeTaskName, KubernetesClosePortForwardTask, {
+                    forwardId = openTask.id
+                }
             }
         }
 
