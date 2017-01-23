@@ -1,6 +1,6 @@
 package com.github.kolleroot.gradle.kubernetes.model
 
-import com.fasterxml.jackson.databind.util.Named
+import org.gradle.api.Named
 import org.gradle.model.Managed
 import org.gradle.model.ModelMap
 
@@ -31,5 +31,5 @@ interface KubernetesLocalDockerRegistry extends DockerRegistry {
     void setPod(String pod)
 
     String getPort()
-    void setPort()
+    void setPort(String port)
 }

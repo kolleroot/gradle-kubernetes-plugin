@@ -25,7 +25,7 @@ dependencies {
     }
     testBaseCompile 'org.apache.commons:commons-lang3:3.5'
 
-    integTestCompile "com.github.docker-java:docker-java:3.0.6"
+    testBaseCompile 'com.github.docker-java:docker-java:3.0.6'
 }
 
 gradlePlugin {

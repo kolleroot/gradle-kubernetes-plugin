@@ -3,12 +3,12 @@ package com.github.kolleroot.gradle.kubernetes.integ
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 import com.github.kolleroot.gradle.kubernetes.testbase.ZipFileHelper
-import com.github.kolleroot.gradle.kubernetes.testbase.GradleSpecification
+import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
 
 /**
  * Some integration testing for docker images
  */
-class DockerImageIntegSpec extends GradleSpecification {
+class DockerImageIntegSpec implements GradleTrait {
 
     private static final String TEST_TEXT_FILE = '''
         Hello World!

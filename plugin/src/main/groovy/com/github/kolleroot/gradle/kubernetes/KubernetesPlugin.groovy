@@ -2,11 +2,14 @@ package com.github.kolleroot.gradle.kubernetes
 
 import com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
+import com.github.kolleroot.gradle.kubernetes.model.internal.DockerRegistryTaskName
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesClosePortForwardTask
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
 import org.gradle.api.Plugin
@@ -15,12 +18,14 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.Defaults
 import org.gradle.model.Each
+import org.gradle.model.Finalize
 import org.gradle.model.Model
 import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
 import org.gradle.model.Validate
+import org.gradle.model.internal.core.Hidden
 
 import java.nio.file.Paths
 
@@ -36,9 +41,12 @@ class KubernetesPlugin implements Plugin<Project> {
 
     static final String KUBERNETES_DOCKERFILES_TASK = 'kubernetesDockerfiles'
     static final String KUBERNETES_DOCKER_BUILD_IMAGES_TASK = 'kubernetesDockerBuildImages'
+    static final String KUBERNETES_DOCKER_PUSH_IMAGES_TASK = 'kubernetesDockerPushImages'
 
     static final String KUBERNETES_DOCKERFILE_BASE = 'kubernetesDockerfile'
     static final String KUBERNETES_DOCKER_BUILD_IMAGE_BASE = 'kubernetesDockerBuildImage'
+    static final String KUBERNETES_DOCKER_TAG_BASE = 'kubernetesDockerTag'
+    static final String KUBERNETES_DOCKER_PUSH_BASE = 'kubernetesDockerPush'
 
     @Override
     void apply(Project project) {
@@ -54,6 +62,11 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Model
         void kubernetes(Kubernetes kubernetes) {
+        }
+
+        @Model
+        @Hidden
+        void kubernetesDockerRegistryTaskNames(ModelMap<DockerRegistryTaskName> map) {
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
@@ -84,25 +97,42 @@ class KubernetesPlugin implements Plugin<Project> {
         }
 
         @Mutate
-        void addDockerRegistryTasks(ModelMap<Task> tasks,
-                                    @Path('kubernetes.dockerRegistries') ModelMap<KubernetesLocalDockerRegistry>
-                                            registries
-        ) {
-            registries.each { registry ->
-                String openTaskName = 'openKubeLocalDockerRegistry' +
-                        "${registry.namespace.capitalize()}${registry.pod.capitalize()}${registry.port}"
-                String closeTaskName = 'closeKubeLocalDockerRegistry' +
-                        "${registry.namespace.capitalize()}${registry.pod.capitalize()}${registry.port}"
+        void addRegistryTaskNames(ModelMap<DockerRegistryTaskName> kubernetesDockerRegistryTaskNames,
+                                  @Path('kubernetes.dockerRegistries') ModelMap<KubernetesLocalDockerRegistry>
+                                          dockerRegistries) {
+            dockerRegistries.each { dockerRegistry ->
+                String name = "${dockerRegistry.name.replace(':', '')}"
 
-                tasks.create openTaskName, KubernetesOpenPortForwardTask, {
+                kubernetesDockerRegistryTaskNames.create name,
+                        DockerRegistryTaskName, {
+                    openTaskName = 'openKubeLocalDockerRegistry' + name.capitalize()
+                    closeTaskName = 'closeKubeLocalDockerRegistry' + name.capitalize()
+
+                    registry = dockerRegistry.name
+                    namespace = dockerRegistry.namespace
+                    pod = dockerRegistry.pod
+                    port = dockerRegistry.port
+                }
+            }
+        }
+
+        @SuppressWarnings('SpaceAroundOperator')
+        @Mutate
+        void addRegistryTasks(ModelMap<Task> tasks,
+                              ModelMap<DockerRegistryTaskName>
+                                      registries) {
+            registries.each { registry ->
+
+                tasks.create registry.openTaskName, KubernetesOpenPortForwardTask, {
                     forwardNamespace = registry.namespace
                     forwardPod = registry.pod
-                    forwartPort = registry.port
+                    forwardPort = registry.port
                 }
 
-                KubernetesOpenPortForwardTask openTask = tasks.get(openTaskName) as KubernetesOpenPortForwardTask
+                KubernetesOpenPortForwardTask openTask = tasks.get(registry.openTaskName) as
+                        KubernetesOpenPortForwardTask
 
-                tasks.create closeTaskName, KubernetesClosePortForwardTask, {
+                tasks.create registry.closeTaskName, KubernetesClosePortForwardTask, {
                     forwardId = openTask.id
                 }
             }
@@ -165,6 +195,81 @@ class KubernetesPlugin implements Plugin<Project> {
 
                 DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
                 kubernetesDockerBuildImages.dependsOn buildImageTask
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Mutate
+        void addDockerTagPushTasks(ModelMap<Task> tasks,
+                                   ModelMap<DockerRegistryTaskName> dockerRegistries,
+                                   @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
+            dockerRegistries.each { dockerRegistry ->
+                dockerImages.each { dockerImage ->
+                    String tagTaskName = KUBERNETES_DOCKER_TAG_BASE +
+                            dockerRegistry.name.capitalize() +
+                            dockerImage.name.capitalize()
+
+                    tasks.create tagTaskName,
+                            DockerTagImage, {
+                        repository = dockerRegistry.registry + '/' + dockerImage.name
+                        targetImageId { dockerImage.name }
+                        tag = 'latest'
+
+                    }
+
+                    Task tagTask = tasks.get(tagTaskName)
+
+                    tasks.create KUBERNETES_DOCKER_PUSH_BASE +
+                            dockerRegistry.name.capitalize() +
+                            dockerImage.name.capitalize(),
+                            DockerPushImage, {
+                        imageName = dockerRegistry.registry + '/' + dockerImage.name
+
+                        dependsOn tagTask
+                    }
+                }
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Finalize
+        void connectBuildToTag(ModelMap<Task> tasks,
+                               ModelMap<DockerRegistryTaskName> dockerRegistries,
+                               @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
+            dockerRegistries.each { dockerRegistry ->
+                dockerImages.each { dockerImage ->
+                    String dockerBuildImageTaskName = KUBERNETES_DOCKER_BUILD_IMAGE_BASE + dockerImage.name.capitalize()
+
+                    String tagTaskName = KUBERNETES_DOCKER_TAG_BASE +
+                            dockerRegistry.name.capitalize() +
+                            dockerImage.name.capitalize()
+
+                    Task tagTask = tasks.get(tagTaskName)
+                    Task buildTask = tasks.get(dockerBuildImageTaskName)
+
+                    tagTask.dependsOn buildTask
+                }
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Finalize
+        void connectPushWithOpenAndClose(ModelMap<Task> tasks,
+                                         ModelMap<DockerRegistryTaskName> dockerRegistries,
+                                         @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
+            dockerRegistries.each { dockerRegistry ->
+                dockerImages.each { dockerImage ->
+                    String pushTaskName = KUBERNETES_DOCKER_PUSH_BASE +
+                            dockerRegistry.name.capitalize() +
+                            dockerImage.name.capitalize()
+
+                    Task push = tasks.get(pushTaskName)
+                    Task open = tasks.get(dockerRegistry.openTaskName)
+                    Task close = tasks.get(dockerRegistry.closeTaskName)
+
+                    push.dependsOn open
+                    push.finalizedBy close
+                }
             }
         }
     }

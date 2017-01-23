@@ -1,16 +1,12 @@
 package com.github.kolleroot.gradle.kubernetes.integ
 
-import com.github.kolleroot.gradle.kubernetes.testbase.GradleSpecification
+import com.github.kolleroot.gradle.kubernetes.testbase.KubernetesTrait
 import io.fabric8.kubernetes.api.model.Pod
-import io.fabric8.kubernetes.client.DefaultKubernetesClient
-import io.fabric8.kubernetes.client.KubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClientException
 import io.fabric8.kubernetes.client.Watcher
 import org.apache.commons.lang3.StringUtils
 import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Shared
 
-import java.security.SecureRandom
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -19,37 +15,10 @@ import java.util.concurrent.TimeUnit
  *
  * This test will create a new namespace for testing and clean it up afterwards.
  */
-class KubernetesTaskSpec extends GradleSpecification {
+class KubernetesTaskSpec implements KubernetesTrait {
 
     static final String TEST_POD = 'test-pod'
     static final String TEST_POD_FILE = 'test-pod.yaml'
-
-    static final Random RANDOM = new SecureRandom()
-
-    @Shared
-    KubernetesClient kubernetesClient
-
-    String namespace = "kubernetes-tasks-test-namespace-${RANDOM.nextLong()}"
-
-    def setupSpec() {
-        kubernetesClient = new DefaultKubernetesClient()
-    }
-
-    def setup() {
-        kubernetesClient.namespaces().createNew()
-                .withNewMetadata()
-                .withName(namespace)
-                .endMetadata()
-                .done()
-    }
-
-    def cleanup() {
-        kubernetesClient.namespaces().withName(namespace).delete()
-    }
-
-    def cleanupSpec() {
-        kubernetesClient.close()
-    }
 
     def "create a simple pod from a yaml file"() {
         given: 'a config file'
@@ -193,6 +162,8 @@ class KubernetesTaskSpec extends GradleSpecification {
         task close(type: KubernetesClosePortForwardTask) {
             forwardId = open.id
         }
+
+        open.finalizedBy close
 
         task remoteReadFast(dependsOn: open) {
             doLast {
