@@ -18,14 +18,7 @@ dependencies {
     compile 'com.bmuschko:gradle-docker-plugin:3.0.3'
     compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
 
-    testBaseCompile gradleTestKit()
-    testBaseCompile "junit:junit:${libraryVersions.junit}"
-    testBaseCompile("org.spockframework:spock-core:${libraryVersions.spock}") {
-        exclude group: 'org.codehaus.groovy'
-    }
-    testBaseCompile 'org.apache.commons:commons-lang3:3.5'
-
-    testBaseCompile 'com.github.docker-java:docker-java:3.0.6'
+    testBaseCompile project(':test-utils')
 }
 
 gradlePlugin {
