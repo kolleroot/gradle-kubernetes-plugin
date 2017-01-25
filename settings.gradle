@@ -1,4 +1,5 @@
 include ":plugin"
+include ":api-model"
 include ":test-utils"
 include ":example-web-project"
 include ":example-application-project"

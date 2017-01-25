@@ -1,0 +1,70 @@
+import org.detoeuf.SwaggerCodeGenTask
+import io.swagger.codegen.config.CodegenConfigurator
+
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
+repositories {
+    jcenter()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                    // "$buildDir/swagger/v1/src/main/java",
+                    "$buildDir/swagger/v1beta1/src/main/java"
+            ]
+            include 'com/github/kolleroot/gradle/kubernetes/model/api/**'
+        }
+    }
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+
+    compile 'io.swagger:swagger-annotations:1.5.8'
+    compile 'com.google.code.gson:gson:2.8.0'
+
+    testCompile project(':test-utils')
+}
+
+task swaggerKubernetesV1Beta1(type: SwaggerCodeGenTask) {
+    configurator = new CodegenConfigurator()
+            .setLang('java')
+            .setOutputDir("$buildDir/swagger/v1beta1")
+            .setInputSpec("$projectDir/src/main/swagger/swagger.json")
+            //.setInputSpec('https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger
+            //        .json')
+            .setTemplateDir("$projectDir/src/main/swagger/tpl")
+            .addAdditionalProperty('dateLibrary', 'java8')
+            //.addTypeMapping('array', 'org.gradle.model.ModelSet')
+            //.addTypeMapping('map', 'org.gradle.model.ModelMap')
+            .addTypeMapping('resource.Quantity', 'String')
+            .addTypeMapping('intstr.IntOrString', 'String')
+            .addTypeMapping('byte[]', 'String')
+            .addLanguageSpecificPrimitive('String')
+            .setModelPackage('com.github.kolleroot.gradle.kubernetes.model.api')
+}
+
+task swaggerKubernetesV1Beta1Original(type: SwaggerCodeGenTask) {
+    configurator = new CodegenConfigurator()
+            .setLang('java')
+            .setOutputDir("$buildDir/swagger/original")
+    //.setInputSpec("$projectDir/src/main/swagger/v1beta1.json")
+            .setInputSpec('https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger.json')
+            .addAdditionalProperty('dateLibrary', 'java8')
+    //.addTypeMapping('array', 'org.gradle.model.ModelSet')
+    //.addTypeMapping('map', 'org.gradle.model.ModelMap')
+            .setModelPackage('com.github.kolleroot.gradle.kubernetes.model.api')
+}
+
+task swaggerKubernetes(dependsOn: [
+//         swaggerKubernetesV1,
+        swaggerKubernetesV1Beta1
+])
+
+compileJava.dependsOn swaggerKubernetes
