@@ -5,32 +5,24 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
-import org.gradle.api.Project
+import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.internal.core.ModelRuleExecutionException
-import org.gradle.model.internal.registry.ModelRegistry
-import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
 /**
  * Test the KubernetesPlugin rule source
  */
-class RulesTest extends Specification {
-
-    Project project
-
-    void setup() {
-        project = ProjectBuilder.builder().build()
-    }
+class RulesTest extends Specification implements GradleProjectTrait {
 
     private Kubernetes kubernetesFromModel() {
-        (project.modelRegistry as ModelRegistry).find('kubernetes', Kubernetes) as Kubernetes
+        getFromModel('kubernetes', Kubernetes)
     }
 
     private TaskContainer tasksFromModel() {
-        (project.modelRegistry as ModelRegistry).find('tasks', TaskContainer) as TaskContainer
+        getFromModel('tasks', TaskContainer)
     }
 
     def 'docker image no default'() {

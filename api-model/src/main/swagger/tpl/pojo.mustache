@@ -1,0 +1,57 @@
+/**
+ * {{#description}}{{.}}{{/description}}{{^description}}{{classname}}{{/description}}
+ */{{#description}}
+@ApiModel(description = "{{{description}}}"){{/description}}
+@Managed
+{{>generatedAnnotation}}{{#discriminator}}{{>typeInfoAnnotation}}{{/discriminator}}
+public interface {{classname}} {{#parent}}implements {{{parent}}} {{/parent}}{
+  {{#vars}}
+    {{#isEnum}}
+    {{^isContainer}}
+{{>modelInnerEnum}}
+    {{/isContainer}}
+    {{/isEnum}}
+    {{#items.isEnum}}
+      {{#items}}
+      {{^isContainer}}
+{{>modelInnerEnum}}
+      {{/isContainer}}
+      {{/items}}
+    {{/items.isEnum}}
+  {{/vars}}
+{{#vars}}
+    /**
+    {{#description}}
+     * {{{description}}}
+    {{/description}}
+    {{^description}}
+     * Get {{name}}
+    {{/description}}
+     *
+    {{#minimum}}
+     * minimum: {{minimum}}
+    {{/minimum}}
+    {{#maximum}}
+     * maximum: {{maximum}}
+    {{/maximum}}
+     * @return {{name}}
+     */{{#isListContainer}}{{#isPrimitiveType}}
+    public List<{{{items.datatypeWithEnum}}}> {{getter}}();
+{{/isPrimitiveType}}{{^isPrimitiveType}}
+    public ModelSet<{{{items.datatypeWithEnum}}}> {{getter}}();
+{{/isPrimitiveType}}{{/isListContainer}}{{#isMapContainer}}{{#isPrimitiveType}}
+    @Unmanaged
+    public Map<String, {{{items.datatypeWithEnum}}}> {{getter}}();
+{{/isPrimitiveType}}{{^isPrimitiveType}}
+    public ModelMap<{{{items.datatypeWithEnum}}}> {{getter}}();
+{{/isPrimitiveType}}{{/isMapContainer}}{{^isListContainer}}{{^isMapContainer}}
+    public {{{datatypeWithEnum}}} {{getter}}();
+{{/isMapContainer}}{{/isListContainer}}{{^isReadOnly}}{{#isPrimitiveType}}{{^isMapContainer}}{{^isListContainer}}
+    public void {{setter}}({{{datatypeWithEnum}}} {{name}});
+{{/isListContainer}}{{/isMapContainer}}{{/isPrimitiveType}}{{/isReadOnly}}{{#isPrimitiveType}}{{#isMapContainer}}
+    public void {{setter}}({{{datatypeWithEnum}}} {{name}});
+{{/isMapContainer}}{{#isListContainer}}
+    public void {{setter}}({{{datatypeWithEnum}}} {{name}});
+{{/isListContainer}}{{/isPrimitiveType}}
+{{/vars}}
+}

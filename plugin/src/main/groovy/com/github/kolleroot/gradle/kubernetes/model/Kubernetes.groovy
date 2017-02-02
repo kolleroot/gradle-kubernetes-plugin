@@ -8,4 +8,6 @@ import org.gradle.model.Managed
 @Managed
 interface Kubernetes {
     DockerImageContainer getDockerImages()
+
+    DockerRegistryContainer getDockerRegistries()
 }

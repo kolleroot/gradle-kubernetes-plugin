@@ -1,5 +1,6 @@
 sourceSets {
     testBase {
+        compileClasspath += sourceSets.main.runtimeClasspath
         runtimeClasspath += compileClasspath
     }
 

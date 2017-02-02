@@ -1,0 +1,14 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+
+    compile 'io.swagger:swagger-codegen:2.2.1'
+}

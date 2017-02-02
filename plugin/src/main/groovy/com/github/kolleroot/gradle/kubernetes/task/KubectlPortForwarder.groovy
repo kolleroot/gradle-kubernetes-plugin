@@ -1,0 +1,88 @@
+package com.github.kolleroot.gradle.kubernetes.task
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+import java.util.concurrent.TimeUnit
+
+/**
+ *  Forward a port from a pod in the cluster to localhost.
+ *
+ *  This implementation uses the kubectl command, because the fabric8 library doesn't support this feature currently
+ *  but there is an open issue.
+ *
+ * @see <a href="https://github.com/fabric8io/kubernetes-client/issues/534" target="_blank">https://github
+ *  .com/fabric8io/kubernetes-client/issues/534</a>
+ */
+class KubectlPortForwarder implements Closeable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KubectlPortForwarder)
+
+    /**
+     * The kubernetes default namespace
+     */
+    public static final String DEFAULT_NAMESPACE = 'default'
+
+    /**
+     * The kubectl port forward command with placeholders for namespace, pod name and port
+     */
+    public static final String CMD_BASE = 'kubectl port-forward --namespace=%s %s %s'
+
+    private final String namespace
+    private final String pod
+    private final String port
+
+    private final Process process
+
+    /**
+     * Forward a port via the kubectl command.
+     *
+     * @param pod the name of the pod
+     * @param port a port in the format "local:remote"
+     */
+    KubectlPortForwarder(String pod, String port) {
+        this(DEFAULT_NAMESPACE, pod, port)
+    }
+
+    /**
+     * Forward a port via the kubectl command.
+     *
+     * @param namespace the namespace of the pod
+     * @param pod the name of the pod
+     * @param port a port in the format "local:remote"
+     */
+    KubectlPortForwarder(String namespace, String pod, String port) {
+        this.namespace = namespace
+        this.pod = pod
+        this.port = port
+
+        process = new ProcessBuilder(String.format(CMD_BASE, namespace, pod, port).split())
+                .start()
+        waitTillReady()
+    }
+
+    /**
+     * Wait until {@code kubectl port-forward} has written at least one line to stdout.
+     */
+    private void waitTillReady() {
+        if (process.alive) {
+            // CAREFUL: don't close the inputstream because kubectl will die because of SIGPIPE (exit code 141)
+            process.inputStream.newReader().with { reader ->
+                LOGGER.warn reader.readLine()
+            }
+
+            process.waitFor(10, TimeUnit.MILLISECONDS)
+            if (!process.alive) {
+                throw new IllegalStateException('Unable to start the the kubectl process for port forwarding')
+            }
+        }
+    }
+
+    @Override
+    void close() {
+        if (process.alive) {
+            process.destroy()
+            // int exit = process.exitValue()
+            // TODO decide if an exception should be thrown if the exit value != 0
+        }
+    }
+}

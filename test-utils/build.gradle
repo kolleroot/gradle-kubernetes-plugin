@@ -1,0 +1,16 @@
+plugins {
+    id 'groovy'
+}
+
+dependencies {
+    compile localGroovy()
+    compile gradleTestKit()
+    compile "junit:junit:${libraryVersions.junit}"
+    compile("org.spockframework:spock-core:${libraryVersions.spock}") {
+        exclude group: 'org.codehaus.groovy'
+    }
+    compile 'org.apache.commons:commons-lang3:3.5'
+
+    compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
+    compile 'com.github.docker-java:docker-java:3.0.6'
+}

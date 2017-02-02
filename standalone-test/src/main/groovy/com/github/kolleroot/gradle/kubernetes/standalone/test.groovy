@@ -29,6 +29,9 @@ class StandaloneTest {
                 logger.info "\t" + it.key + ": " + it.value
             }
         }
+
+        // client.namespaces().createNew().withNewMetadata().withName('asdf').endMetadata().done()
+        // client.namespaces().withName('asdf').delete()
     }
 
     static boolean isClusterAccessible(KubernetesClient client) {
