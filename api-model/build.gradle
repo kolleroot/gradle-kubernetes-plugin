@@ -14,7 +14,7 @@ sourceSets {
     main {
         java {
             srcDirs += [
-                    // "$buildDir/swagger/v1/src/main/java",
+                    "$projectDir/src/main/java",
                     "$buildDir/swagger/v1beta1/src/main/java"
             ]
             include 'com/github/kolleroot/gradle/kubernetes/model/api/**'
@@ -27,6 +27,7 @@ dependencies {
     compile localGroovy()
 
     compile 'io.swagger:swagger-annotations:1.5.8'
+    compile 'com.owlike:genson:1.4'
     compile 'com.google.code.gson:gson:2.8.0'
 
     testCompile project(':test-utils')
