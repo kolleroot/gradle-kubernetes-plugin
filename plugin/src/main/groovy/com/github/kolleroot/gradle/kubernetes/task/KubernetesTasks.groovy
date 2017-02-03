@@ -4,7 +4,7 @@ import com.github.kolleroot.gradle.kubernetes.helper.PortForwardRegistry
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
-import io.fabric8.kubernetes.client.dsl.NamespaceVisitFromServerGetDeleteRecreateApplicable
+import io.fabric8.kubernetes.client.dsl.NamespaceListVisitFromServerGetDeleteRecreateWaitApplicable
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -36,13 +36,13 @@ abstract class KubernetesLoadedTask extends KubernetesTask {
     }
 
     abstract void kubernetesLoadedAction(
-            NamespaceVisitFromServerGetDeleteRecreateApplicable<List<HasMetadata>, Boolean> loaded)
+            NamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean> loaded)
 }
 
 class KubernetesCreate extends KubernetesLoadedTask {
     @Override
     void kubernetesLoadedAction(
-            NamespaceVisitFromServerGetDeleteRecreateApplicable<List<HasMetadata>, Boolean> loaded) {
+            NamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean> loaded) {
         loaded.createOrReplace()
     }
 }
@@ -50,7 +50,7 @@ class KubernetesCreate extends KubernetesLoadedTask {
 class KubernetesDelete extends KubernetesLoadedTask {
     @Override
     void kubernetesLoadedAction(
-            NamespaceVisitFromServerGetDeleteRecreateApplicable<List<HasMetadata>, Boolean> loaded) {
+            NamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean> loaded) {
         loaded.delete()
     }
 }

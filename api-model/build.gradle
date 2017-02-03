@@ -26,7 +26,7 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
 
-    compile 'io.swagger:swagger-annotations:1.5.8'
+    compile "io.swagger:swagger-annotations:${libraryVersions.swaggerAnnotations}"
     compile 'com.google.code.gson:gson:2.8.0'
 
     testCompile project(':test-utils')
