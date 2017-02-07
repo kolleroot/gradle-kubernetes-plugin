@@ -15,8 +15,12 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model.api
 
+import com.owlike.genson.Context
 import com.owlike.genson.GensonBuilder
 import com.owlike.genson.ext.GensonBundle
+import com.owlike.genson.reflect.BeanProperty
+import com.owlike.genson.reflect.RuntimePropertyFilter
+import org.gradle.api.Named
 import org.gradle.model.internal.core.MutableModelNode
 import org.gradle.model.internal.type.ModelType
 
@@ -36,5 +40,25 @@ class GradleManagedModelBundle extends GensonBundle {
                 .exclude(ModelType)
                 .useRuntimeType(true)
                 .setSkipNull(true)
+                .useRuntimePropertyFilter(NamedNamePropertyFilter.INSTANCE)
+    }
+}
+
+/**
+ * This property filter ignores the property {@code name} if the class implements the {@link Named} interface.
+ *
+ * {@link com.owlike.genson.annotation.JsonIgnore} doesn't seem to work, if you overwrite the property and add it to
+ * the overwritten implementation.
+ */
+class NamedNamePropertyFilter implements RuntimePropertyFilter {
+
+    public static final NamedNamePropertyFilter INSTANCE = new NamedNamePropertyFilter()
+
+    private NamedNamePropertyFilter() {
+    }
+
+    @Override
+    boolean shouldInclude(BeanProperty property, Context ctx) {
+        !(property.name == 'name' && Named.class.isAssignableFrom(property.concreteClass))
     }
 }
