@@ -30,15 +30,15 @@ import java.lang.reflect.Type
  */
 class NotEmptyCollectionConverterFactory implements Factory<Converter<Collection<?>>> {
 
-    public final
-    static NotEmptyCollectionConverterFactory instance = new NotEmptyCollectionConverterFactory();
+    public final static NotEmptyCollectionConverterFactory INSTANCE = new NotEmptyCollectionConverterFactory()
 
     private NotEmptyCollectionConverterFactory() {
     }
 
     @SuppressWarnings(['rawtypes', 'unchecked'])
+    @Override
     Converter<Collection<?>> create(Type forType, Genson genson) {
-        return new NotEmptyCollectionConverter<>(
+        new NotEmptyCollectionConverter<>(
                 DefaultConverters.CollectionConverterFactory.instance.create(forType, genson)
         )
     }
@@ -50,7 +50,7 @@ class NotEmptyCollectionConverterFactory implements Factory<Converter<Collection
  */
 class NotEmptyCollectionConverter<E> implements Converter<Collection<E>> {
 
-    private Converter<Collection<E>> delegate
+    private final Converter<Collection<E>> delegate
 
     NotEmptyCollectionConverter(Converter<Collection<E>> delegate) {
         this.delegate = delegate
@@ -67,6 +67,6 @@ class NotEmptyCollectionConverter<E> implements Converter<Collection<E>> {
 
     @Override
     Collection<E> deserialize(ObjectReader reader, Context ctx) throws Exception {
-        return delegate.deserialize(reader, ctx)
+        delegate.deserialize(reader, ctx)
     }
 }

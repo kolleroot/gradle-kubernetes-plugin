@@ -25,7 +25,7 @@ import spock.lang.Specification
  */
 class JsonModelSpec extends Specification implements GradleProjectTrait {
     def "check if a managed model was modified"() {
-        given: "a managed model"
+        given: 'a managed model'
         project.allprojects {
             apply plugin: PluginWithPodModel
         }
@@ -65,7 +65,7 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
 
         Map propertyViews = propertyViewsField.get(declaringClass)
 
-        expect: "the propertyView to be empty"
+        expect: 'the propertyView to be empty'
 
         propertyViews.size() == 0
     }
@@ -97,10 +97,11 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
         when: 'converting the model to json'
         V1Pod pod = getFromModel('pod', V1Pod)
 
+        /* TODO: use the new EmptyObjectRemoverGenson class and test it
         String json = new GradleGensonBuilder()
                 .withBundle(GradleManagedModelBundle.INSTANCE)
                 .create()
-                .serialize(pod)
+                .serialize(pod)*/
 
         then: 'it matches the template'
         pod.apiVersion == 'v1'
@@ -115,6 +116,7 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
     }
 
     static class PluginWithPodModel extends RuleSource {
+        @SuppressWarnings(['EmptyMethod', 'UnusedMethodParameter'])
         @Model
         void pod(V1Pod pod) {
 

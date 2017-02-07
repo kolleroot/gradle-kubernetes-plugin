@@ -26,12 +26,14 @@ import com.owlike.genson.convert.DefaultConverters
 class GradleGensonBuilder extends GensonBuilder {
     @Override
     protected void addDefaultConverterFactories(List<Factory<? extends Converter<?>>> factories) {
-        factories.add(DefaultConverters.ArrayConverterFactory.instance)
-        //factories.add(DefaultConverters.CollectionConverterFactory.instance)
-        factories.add(NotEmptyCollectionConverterFactory.instance)
-        factories.add(DefaultConverters.MapConverterFactory.instance)
-        factories.add(DefaultConverters.EnumConverterFactory.instance)
-        factories.add(DefaultConverters.PrimitiveConverterFactory.instance)
-        factories.add(DefaultConverters.UntypedConverterFactory.instance)
+        factories.with {
+            add(DefaultConverters.ArrayConverterFactory.instance)
+            //factories.add(DefaultConverters.CollectionConverterFactory.instance)
+            add(NotEmptyCollectionConverterFactory.INSTANCE)
+            add(DefaultConverters.MapConverterFactory.instance)
+            add(DefaultConverters.EnumConverterFactory.instance)
+            add(DefaultConverters.PrimitiveConverterFactory.instance)
+            add(DefaultConverters.UntypedConverterFactory.instance)
+        }
     }
 }

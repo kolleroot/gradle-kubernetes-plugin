@@ -4,6 +4,7 @@ import io.swagger.codegen.config.CodegenConfigurator
 plugins {
     id 'java'
     id 'groovy'
+    id 'codenarc'
 }
 
 repositories {
@@ -69,3 +70,11 @@ task swaggerKubernetes(dependsOn: [
 ])
 
 compileJava.dependsOn swaggerKubernetes
+
+codenarcMain {
+    configFile file("${rootDir}/config/codenarc/codenarc-main.rules")
+}
+
+codenarcTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
