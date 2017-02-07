@@ -25,7 +25,7 @@ import com.owlike.genson.stream.ObjectWriter
  * This is done by tracking the current state of the writer. When the first non null value is written, all the
  * encapsulating objects and arrays are written.
  */
-class EmptyObjectRemoverGenson extends JsonWriter {
+class EmptyObjectRemoverJsonWriter extends JsonWriter {
 
     /**
      * A structure to track the current state of the json
@@ -87,8 +87,8 @@ class EmptyObjectRemoverGenson extends JsonWriter {
      */
     protected char[] currentName = null
 
-    EmptyObjectRemoverGenson(Writer writer, final boolean skipNull, final boolean htmlSafe,
-                             boolean indentation) {
+    EmptyObjectRemoverJsonWriter(Writer writer, final boolean skipNull, final boolean htmlSafe,
+                                 boolean indentation) {
         super(writer, skipNull, htmlSafe, indentation)
 
         objectStateContext.push(new ObjectState(null, JsonType.EMPTY))

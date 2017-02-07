@@ -24,52 +24,6 @@ import spock.lang.Specification
  * Check if the generated json is right
  */
 class JsonModelSpec extends Specification implements GradleProjectTrait {
-    def "check if a managed model was modified"() {
-        given: 'a managed model'
-        project.allprojects {
-            apply plugin: PluginWithPodModel
-        }
-        project.allprojects {
-            model {
-                pod {
-                    apiVersion = 'v1'
-                    kind = 'Pod'
-                    metadata {
-                        name = 'test'
-                    }
-                    spec {
-                        containers.create {
-                            image = 'ubuntu:trusty'
-                            command = ['echo']
-                            args = ['Hello World']
-                        }
-                    }
-                }
-            }
-        }
-
-        V1Pod pod = getFromModel('pod', V1Pod)
-
-        def stateField = pod.class.getDeclaredField('$state')
-        stateField.accessible = true
-
-        def state = stateField.get(pod)
-
-        def declaringClassField = state.class.getDeclaredField('this$1')
-        declaringClassField.accessible = true
-
-        def declaringClass = declaringClassField.get(state)
-
-        def propertyViewsField = declaringClass.class.getDeclaredField('propertyViews')
-        propertyViewsField.accessible = true
-
-        Map propertyViews = propertyViewsField.get(declaringClass)
-
-        expect: 'the propertyView to be empty'
-
-        propertyViews.size() == 0
-    }
-
     def "create a pod spec"() {
         given: 'a project with a pod model'
         project.allprojects {
@@ -97,11 +51,7 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
         when: 'converting the model to json'
         V1Pod pod = getFromModel('pod', V1Pod)
 
-        /* TODO: use the new EmptyObjectRemoverGenson class and test it
-        String json = new GradleGensonBuilder()
-                .withBundle(GradleManagedModelBundle.INSTANCE)
-                .create()
-                .serialize(pod)*/
+        String json = new GradleGenson().serialize(pod)
 
         then: 'it matches the template'
         pod.apiVersion == 'v1'
@@ -111,8 +61,8 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
         pod.spec.containers[0].command == ['echo']
         pod.spec.containers[0].args == ['Hello World']
 
-        // json == '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"test"},' +
-        //         '"spec":{"containers":[{"image":"ubuntu:trusty","command":["echo"],"args":["Hello World"]}]}}'
+        json == '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"test"},' +
+                '"spec":{"containers":[{"args":["Hello World"],"command":["echo"],"image":"ubuntu:trusty"}]}}'
     }
 
     static class PluginWithPodModel extends RuleSource {

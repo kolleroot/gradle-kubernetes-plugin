@@ -16,9 +16,6 @@
 package com.github.kolleroot.gradle.kubernetes.model.api
 
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
-import com.owlike.genson.Context
-import com.owlike.genson.Genson
-import com.owlike.genson.stream.ObjectWriter
 import org.gradle.model.Managed
 import org.gradle.model.Model
 import org.gradle.model.ModelSet
@@ -26,26 +23,18 @@ import org.gradle.model.RuleSource
 import spock.lang.Specification
 
 /**
- * Specify the {@link EmptyObjectRemoverGenson}
+ * Specify the {@link EmptyObjectRemoverJsonWriter}
  */
-class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjectTrait {
+class EmptyObjectRemoverJsonWriterSpec extends Specification implements GradleProjectTrait {
 
-    Genson genson
+    GradleGenson serializer
 
     void setup() {
-        genson = new GradleGensonBuilder().withBundle(GradleManagedModelBundle.INSTANCE).create()
+        serializer = new GradleGenson()
 
         project.allprojects {
             apply plugin: JsonTestRuleSource
         }
-    }
-
-    String serialize(Object o) {
-        StringWriter sw = new StringWriter()
-        ObjectWriter ow = new EmptyObjectRemoverGenson(sw, true, false, false)
-        genson.serialize(o, o.getClass(), ow, new Context(genson))
-
-        sw.toString()
     }
 
     OuterObject getOuterObject() {
@@ -56,7 +45,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         given: 'no configuration'
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches an empty string'
         json == ''
@@ -79,7 +68,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"innerProperty":{"stringProperty":"Welt"},"intProperty":10,"longProperty":20,"shortProperty":1,' +
@@ -100,7 +89,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"intProperty":10,"longProperty":20,"shortProperty":1,"stringProperty":"Hallo"}'
@@ -130,7 +119,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"deepNested":{"nested":{"nested":{"nested":{"nested":{"stringProperty":"Very deep inside"}}}}}}'
@@ -150,7 +139,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"innerModels":[{"doubleProperty":3.14,"stringProperty":"Pi"}]}'
@@ -178,7 +167,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"innerModels":[{"doubleProperty":3.14,"stringProperty":"Pi"},{"doubleProperty":2.72,' +
@@ -200,7 +189,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"stringValues":["Rabbit","Alice","Hatter"]}'
@@ -227,7 +216,7 @@ class EmptyObjectRemoverGensonSpec extends Specification implements GradleProjec
         }
 
         when: 'serialized'
-        String json = serialize(outerObject)
+        String json = serializer.serialize(outerObject)
 
         then: 'the json matches'
         json == '{"integerValues":[1,1,2,3,5,8,13,21,34]}'

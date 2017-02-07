@@ -15,15 +15,55 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model.api
 
+import com.owlike.genson.Context
 import com.owlike.genson.Converter
 import com.owlike.genson.Factory
+import com.owlike.genson.Genson
 import com.owlike.genson.GensonBuilder
 import com.owlike.genson.convert.DefaultConverters
+import com.owlike.genson.stream.ObjectWriter
+
+/**
+ * A json serializer for gradle managed models
+ */
+class GradleGenson {
+    private final Genson genson
+
+    GradleGenson() {
+        this.genson = new GradleGensonBuilder().create()
+    }
+
+    /**
+     * Serialize an object to string
+     * @param o to object to serialize
+     * @return the string representation
+     */
+    String serialize(Object o) {
+        StringWriter sw = new StringWriter()
+        serialize(o, sw)
+        sw.toString()
+    }
+
+    /**
+     * Serialize an object {@code o} to the writer {@code w}
+     * @param o the object to serialize
+     * @param w the writer to write to
+     */
+    void serialize(Object o, Writer w) {
+        ObjectWriter objectWriter = new EmptyObjectRemoverJsonWriter(w, genson.skipNull, genson.htmlSafe, false)
+        genson.serialize(o, o.getClass(), objectWriter, new Context(genson))
+    }
+}
 
 /**
  * Override the default factories
  */
 class GradleGensonBuilder extends GensonBuilder {
+
+    GradleGensonBuilder() {
+        this.withBundle(GradleManagedModelBundle.INSTANCE)
+    }
+
     @Override
     protected void addDefaultConverterFactories(List<Factory<? extends Converter<?>>> factories) {
         factories.with {
