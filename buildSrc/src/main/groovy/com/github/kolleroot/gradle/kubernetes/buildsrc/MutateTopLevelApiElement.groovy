@@ -37,7 +37,7 @@ class MutateTopLevelApiElement extends SourceTask {
                 details.copyTo(details.relativePath.getFile(destinationDir))
             } else {
                 details.relativePath.getFile(destinationDir).withWriter { w ->
-                    w << details.file.text.replaceAll(/(?<=public interface )([a-zA-Z1-9]+)\s(?=\{)/, /$1 extends TopLevelApiObject /)
+                    w << details.file.text.replaceAll(/(?<=public interface )([a-zA-Z1-9]+)\sextends\s([a-zA-Z0-9]+(?:,\s[a-zA-Z0-9]+)*)(?=\s\{)/, /$1 extends $2, TopLevelApiObject /)
                 }
             }
         }

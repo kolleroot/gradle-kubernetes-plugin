@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.model.api
+package com.github.kolleroot.gradle.kubernetes.model
 
-import com.owlike.genson.annotation.JsonIgnore
+import com.github.kolleroot.gradle.kubernetes.model.api.TopLevelApiObject
+import org.gradle.model.ModelMap
 
 /**
- * If {@code preserve} is true, this object should not collapsed if empty when serialized.
+ * Holds a collection of kubernetes api objects
  */
-interface PreserveOnEmptyAware {
-    /**
-     * If the object should be preserved in the event, that all the other properties are empty.
-     *
-     * This property will not be serialized.
-     * @return
-     */
-    @JsonIgnore
-    boolean getPreserve()
-
-    void setPreserve(boolean preserve)
+interface KubernetesObjectContainer extends ModelMap<TopLevelApiObject> {
 }

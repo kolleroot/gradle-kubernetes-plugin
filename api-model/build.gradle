@@ -42,6 +42,7 @@ task generateKubernetesModel(type: SwaggerCodeGenTask) {
     //        .json')
             .setTemplateDir("$projectDir/src/main/swagger/tpl")
             .addAdditionalProperty('dateLibrary', 'java8')
+            .addAdditionalProperty('serializableModel', 'true')
     //.addTypeMapping('array', 'org.gradle.model.ModelSet')
     //.addTypeMapping('map', 'org.gradle.model.ModelMap')
             .addTypeMapping('resource.Quantity', 'String')

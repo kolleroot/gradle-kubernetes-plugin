@@ -15,6 +15,8 @@ dependencies {
     compile localGroovy()
     compile gradleApi()
 
+    compile project(':api-model')
+
     compile "com.bmuschko:gradle-docker-plugin:${libraryVersions.dockerPlugin}"
     compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
 

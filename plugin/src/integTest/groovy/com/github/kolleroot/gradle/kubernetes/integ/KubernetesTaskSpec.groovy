@@ -15,12 +15,14 @@
  */
 package com.github.kolleroot.gradle.kubernetes.integ
 
+import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
 import com.github.kolleroot.gradle.kubernetes.testbase.KubernetesTrait
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.client.KubernetesClientException
 import io.fabric8.kubernetes.client.Watcher
 import org.apache.commons.lang3.StringUtils
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Specification
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -30,7 +32,7 @@ import java.util.concurrent.TimeUnit
  *
  * This test will create a new namespace for testing and clean it up afterwards.
  */
-class KubernetesTaskSpec implements KubernetesTrait {
+class KubernetesTaskSpec extends Specification implements KubernetesTrait, GradleTrait {
 
     static final String TEST_POD = 'test-pod'
     static final String TEST_POD_FILE = 'test-pod.yaml'
