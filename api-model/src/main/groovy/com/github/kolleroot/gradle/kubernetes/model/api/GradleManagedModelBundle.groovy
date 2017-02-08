@@ -59,6 +59,6 @@ class NamedNamePropertyFilter implements RuntimePropertyFilter {
 
     @Override
     boolean shouldInclude(BeanProperty property, Context ctx) {
-        !(property.name == 'name' && Named.class.isAssignableFrom(property.concreteClass))
+        !(property.name == 'name' && Named.isAssignableFrom(property.concreteClass))
     }
 }
