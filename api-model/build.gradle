@@ -56,13 +56,15 @@ task extractGeneratedKubernetesModel(type: Copy, dependsOn: generateKubernetesMo
         include 'com/github/kolleroot/gradle/kubernetes/model/api/*.java'
     }
 
-    into "$buildDir/swagger/kubernetes/model"
+    into "$buildDir/swagger/kubernetes/extracted"
 }
 
 task fixTopLevelObjects(type: MutateTopLevelApiElement, dependsOn: extractGeneratedKubernetesModel) {
     source = extractGeneratedKubernetesModel
 
     ignoreClasses << 'V1OwnerReference.java'
+
+    destinationDir = "$buildDir/swagger/kubernetes/model"
 }
 
 compileJava.dependsOn fixTopLevelObjects
