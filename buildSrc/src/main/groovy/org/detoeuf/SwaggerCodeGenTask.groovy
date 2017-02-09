@@ -1,4 +1,7 @@
 package org.detoeuf
+
+import io.swagger.codegen.DefaultGenerator
+
 /**
  *
  MIT License
@@ -23,12 +26,12 @@ package org.detoeuf
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-import io.swagger.codegen.DefaultGenerator
 import io.swagger.codegen.config.CodegenConfigurator
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
@@ -38,9 +41,24 @@ class SwaggerCodeGenTask extends DefaultTask {
 
     private CodegenConfigurator codegenConfigurator
 
-    @Input
+    @InputFile
+    File getSwaggerFile() {
+        project.file(getConfigurator().getInputSpec())
+    }
+
+    @InputDirectory
+    File getTemplateDirectory() {
+        project.file(getConfigurator().getTemplateDir())
+    }
+
+    @OutputDirectory
+    File getOutputDirectory() {
+        project.file(getConfigurator().getOutputDir())
+    }
+
+    @Internal
     CodegenConfigurator getConfigurator() {
-        if(codegenConfigurator == null) {
+        if (codegenConfigurator == null) {
             return project.extensions.findByName('swagger') as CodegenConfigurator
         } else {
             return codegenConfigurator

@@ -17,6 +17,7 @@ package com.github.kolleroot.gradle.kubernetes.testbase
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command.InspectImageResponse
+import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import org.junit.After
@@ -49,6 +50,14 @@ trait DockerTrait {
 
     void removeImage(String name) {
         dockerClient.removeImageCmd(name).exec()
+    }
+
+    void removeImageIfExists(String name) {
+        try {
+            dockerClient.removeImageCmd(name).exec()
+        } catch(NotFoundException e) {
+
+        }
     }
 
     InspectImageResponse inspectImage(String name) {

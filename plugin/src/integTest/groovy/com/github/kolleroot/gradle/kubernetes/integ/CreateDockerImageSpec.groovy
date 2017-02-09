@@ -166,6 +166,6 @@ class CreateDockerImageSpec extends Specification implements GradleTrait, Docker
 
         cleanup: 'the local images'
         // removeImage 'simple:latest' // the image is already gone
-        removeImage 'localhost:5050/simple:latest'
+        removeImageIfExists 'localhost:5050/simple:latest'
     }
 }

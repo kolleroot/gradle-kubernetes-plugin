@@ -6,6 +6,7 @@ ext {
             dockerPlugin      : '3.0.5',
 	    swaggerCodegen    : '2.2.1',
 	    swaggerAnnotations: '1.5.12',
+	    genson            : '1.4',
 
             javaeeApi         : '7.0',
 

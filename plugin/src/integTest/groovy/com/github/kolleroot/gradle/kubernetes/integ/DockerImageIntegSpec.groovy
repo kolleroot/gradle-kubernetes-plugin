@@ -17,13 +17,14 @@ package com.github.kolleroot.gradle.kubernetes.integ
 
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
-import com.github.kolleroot.gradle.kubernetes.testbase.ZipFileHelper
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
+import com.github.kolleroot.gradle.kubernetes.testbase.ZipFileHelper
+import spock.lang.Specification
 
 /**
  * Some integration testing for docker images
  */
-class DockerImageIntegSpec implements GradleTrait {
+class DockerImageIntegSpec extends Specification implements GradleTrait {
 
     private static final String TEST_TEXT_FILE = '''
         Hello World!

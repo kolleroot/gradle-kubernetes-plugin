@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.apimodel
+package com.github.kolleroot.gradle.kubernetes.model.api
 
-import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.model.Model
 import org.gradle.model.RuleSource
@@ -52,6 +51,8 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
         when: 'converting the model to json'
         V1Pod pod = getFromModel('pod', V1Pod)
 
+        String json = new GradleGenson().serialize(pod)
+
         then: 'it matches the template'
         pod.apiVersion == 'v1'
         pod.kind == 'Pod'
@@ -59,9 +60,13 @@ class JsonModelSpec extends Specification implements GradleProjectTrait {
         pod.spec.containers[0].image == 'ubuntu:trusty'
         pod.spec.containers[0].command == ['echo']
         pod.spec.containers[0].args == ['Hello World']
+
+        json == '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"test"},' +
+                '"spec":{"containers":[{"args":["Hello World"],"command":["echo"],"image":"ubuntu:trusty"}]}}'
     }
 
     static class PluginWithPodModel extends RuleSource {
+        @SuppressWarnings(['EmptyMethod', 'UnusedMethodParameter'])
         @Model
         void pod(V1Pod pod) {
 

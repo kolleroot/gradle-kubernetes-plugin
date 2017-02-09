@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.model
+package com.github.kolleroot.gradle.kubernetes.model.api;
 
-import org.gradle.model.Managed
+import com.owlike.genson.annotation.JsonIgnore;
+import org.gradle.api.Named;
+import org.gradle.model.Managed;
 
 /**
- * The specifications for the kubernetes model
+ * Marks all objects in the kubernetes api which can be directly sent to the api server
  */
 @Managed
-interface Kubernetes {
-    DockerImageContainer getDockerImages()
-
-    DockerRegistryContainer getDockerRegistries()
-
-    KubernetesObjectContainer getKubernetesObjects()
+public interface TopLevelApiObject extends PreserveOnEmptyAware, Named {
 }

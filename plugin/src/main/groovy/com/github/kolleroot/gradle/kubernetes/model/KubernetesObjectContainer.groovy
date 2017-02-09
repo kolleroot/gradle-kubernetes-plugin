@@ -15,16 +15,11 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model
 
-import org.gradle.model.Managed
+import com.github.kolleroot.gradle.kubernetes.model.api.TopLevelApiObject
+import org.gradle.model.ModelMap
 
 /**
- * The specifications for the kubernetes model
+ * Holds a collection of kubernetes api objects
  */
-@Managed
-interface Kubernetes {
-    DockerImageContainer getDockerImages()
-
-    DockerRegistryContainer getDockerRegistries()
-
-    KubernetesObjectContainer getKubernetesObjects()
+interface KubernetesObjectContainer extends ModelMap<TopLevelApiObject> {
 }

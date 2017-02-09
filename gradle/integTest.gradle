@@ -18,18 +18,3 @@ gradlePlugin {
 }
 
 check.dependsOn integTest
-
-gradle.projectsEvaluated {
-    def quickTasks = []
-
-    gradle.rootProject.allprojects.each { project ->
-        quickTasks.addAll(project.tasks.findAll { it.name == 'test' })
-        quickTasks.addAll(project.tasks.withType(FindBugs))
-        quickTasks.addAll(project.tasks.withType(Pmd))
-        quickTasks.addAll(project.tasks.withType(CodeNarc))
-    }
-
-    quickTasks.each { task ->
-        project.tasks.integTest.shouldRunAfter task
-    }
-}

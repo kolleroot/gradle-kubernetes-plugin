@@ -124,12 +124,12 @@ ruleset {
     ToStringReturnsNull 
     
     // rulesets/dry.xml
-    DuplicateListLiteral 
-    DuplicateMapLiteral 
-    DuplicateNumberLiteral 
-    DuplicateStringLiteral {
-        ignoreStrings = '/'
-    }
+    //DuplicateListLiteral
+    //DuplicateMapLiteral
+    //DuplicateNumberLiteral
+    //DuplicateStringLiteral {
+    //    ignoreStrings = '/'
+    //}
     
     // rulesets/enhanced.xml
     /*

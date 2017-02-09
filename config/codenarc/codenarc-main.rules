@@ -126,7 +126,9 @@ ruleset {
     // rulesets/dry.xml
     DuplicateListLiteral 
     DuplicateMapLiteral 
-    DuplicateNumberLiteral 
+    DuplicateNumberLiteral {
+        ignoreNumbers = '0,1,0.0'
+    }
     DuplicateStringLiteral  {
         ignoreStrings = ',/'
     }

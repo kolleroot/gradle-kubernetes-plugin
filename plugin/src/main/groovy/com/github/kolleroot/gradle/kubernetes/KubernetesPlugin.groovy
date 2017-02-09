@@ -85,15 +85,6 @@ class KubernetesPlugin implements Plugin<Project> {
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
-        @Validate
-        void checkDockerImageNotEmptyAndFrom(@Each DockerImage dockerImage) {
-            assert !dockerImage.instructions.empty: 'The list of instructions MUST not be empty. There must be at' +
-                    ' least one FROM instruction.'
-            assert dockerImage.instructions.first().startsWith('FROM '): 'The list of instructions must start ' +
-                    'with an FROM instruction.'
-        }
-
-        @SuppressWarnings('GrMethodMayBeStatic')
         @Defaults
         void addDefaultDockerfileTask(ModelMap<Task> tasks) {
             tasks.create KUBERNETES_DOCKERFILES_TASK, {
@@ -286,6 +277,15 @@ class KubernetesPlugin implements Plugin<Project> {
                     push.finalizedBy close
                 }
             }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Validate
+        void checkDockerImageNotEmptyAndFrom(@Each DockerImage dockerImage) {
+            assert !dockerImage.instructions.empty: 'The list of instructions MUST not be empty. There must be at' +
+                    ' least one FROM instruction.'
+            assert dockerImage.instructions.first().startsWith('FROM '): 'The list of instructions must start ' +
+                    'with an FROM instruction.'
         }
     }
 }

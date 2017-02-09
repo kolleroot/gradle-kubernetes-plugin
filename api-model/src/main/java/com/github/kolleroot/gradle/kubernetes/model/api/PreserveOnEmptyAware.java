@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.model
+package com.github.kolleroot.gradle.kubernetes.model.api;
 
-import org.gradle.model.Managed
+import com.owlike.genson.annotation.JsonIgnore;
 
 /**
- * The specifications for the kubernetes model
+ * If {@code preserve} is true, this object should not collapsed if empty when serialized.
  */
-@Managed
-interface Kubernetes {
-    DockerImageContainer getDockerImages()
+public interface PreserveOnEmptyAware {
+    /**
+     * If the object should be preserved in the event, that all the other properties are empty.
+     * <p>
+     * This property will not be serialized.
+     *
+     * @return
+     */
+    @JsonIgnore
+    Boolean getPreserve();
 
-    DockerRegistryContainer getDockerRegistries()
-
-    KubernetesObjectContainer getKubernetesObjects()
+    void setPreserve(Boolean preserve);
 }

@@ -4,7 +4,7 @@
 @ApiModel(description = "{{{description}}}"){{/description}}
 @Managed
 {{>generatedAnnotation}}{{#discriminator}}{{>typeInfoAnnotation}}{{/discriminator}}
-public interface {{classname}} {{#parent}}implements {{{parent}}} {{/parent}}{
+public interface {{classname}} extends PreserveOnEmptyAware{{#parent}}, {{{parent}}}{{/parent}}{{#serializableModel}}, Serializable{{/serializableModel}} {
   {{#vars}}
     {{#isEnum}}
     {{^isContainer}}
