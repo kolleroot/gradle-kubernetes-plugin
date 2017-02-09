@@ -29,7 +29,7 @@ public interface PreserveOnEmptyAware {
      * @return
      */
     @JsonIgnore
-    boolean getPreserve();
+    Boolean getPreserve();
 
-    void setPreserve(boolean preserve);
+    void setPreserve(Boolean preserve);
 }

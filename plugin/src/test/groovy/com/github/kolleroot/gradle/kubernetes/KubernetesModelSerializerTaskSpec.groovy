@@ -24,7 +24,9 @@ import spock.lang.Specification
 class KubernetesModelSerializerTaskSpec extends Specification implements GradleTrait {
     static final String BASE_SETUP = """
         import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
+        import com.github.kolleroot.gradle.kubernetes.model.api.TopLevelApiObject
         import com.github.kolleroot.gradle.kubernetes.task.KubernetesModelSerializerTask
+        import org.gradle.model.Defaults
         import org.gradle.model.Model
         import org.gradle.model.Mutate
         import org.gradle.model.RuleSource
@@ -40,6 +42,11 @@ class KubernetesModelSerializerTaskSpec extends Specification implements GradleT
         class SimpleTestRule extends RuleSource {
             @Model
             void pod(V1Pod pod) {
+            }
+
+            @Defaults
+            void preserveRootObject(TopLevelApiObject tlao) {
+                tlao.preserve = true
             }
 
             @Mutate
@@ -68,7 +75,7 @@ class KubernetesModelSerializerTaskSpec extends Specification implements GradleT
 
         then: 'there will be a json file'
         jsonFile.exists()
-        jsonFile.text == ''
+        jsonFile.text == '{}'
     }
 
     def "serialize a simple pod"() {
@@ -92,5 +99,44 @@ class KubernetesModelSerializerTaskSpec extends Specification implements GradleT
         then: 'there will be a json file'
         jsonFile.exists()
         jsonFile.text == '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"test"}}'
+    }
+
+    def "serialize a pod preserving emptyDir"() {
+        given: 'a gradle project with a simple model and task creating rule'
+        buildFile.text += """
+        model {
+            pod {
+                apiVersion = 'v1'
+                kind = 'Pod'
+                metadata {
+                    name = 'test'
+                }
+                spec {
+                    containers.create {
+                        image = 'ubuntu:trusty'
+                        volumeMounts.create {
+                            name = 'data'
+                            mountPath = '/data'
+                        }
+                    }
+                    volumes.create {
+                        name = 'data'
+                        emptyDir { preserve = true }
+                    }
+                }
+            }
+        }
+        """.stripIndent().trim()
+
+        when: 'the build succeeds'
+        succeeds(':generateJson')
+        def jsonFile = new File(buildFolder.root, 'build/pod.json')
+
+        then: 'there will be a json file'
+        jsonFile.exists()
+        jsonFile.text == '{"apiVersion":"v1","kind":"Pod","metadata":{"name":"test"},"spec":{' +
+                '"containers":[{"image":"ubuntu:trusty","volumeMounts":[{"mountPath":"/data","name":"data"}]}],' +
+                '"volumes":[{"emptyDir":{},"name":"data"}]' +
+                '}}'
     }
 }

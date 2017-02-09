@@ -186,7 +186,7 @@ class EmptyObjectRemoverJsonWriter extends JsonWriter {
     /**
      * Make all the encapsulating objects and arrays real.
      */
-    protected void realizeAllEmptyObjects() {
+    void realizeAllEmptyObjects() {
         // break if the current object is already written
         if (!currentObjectState.empty) {
             return

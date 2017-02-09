@@ -23,5 +23,5 @@ import org.gradle.model.Managed;
  * Marks all objects in the kubernetes api which can be directly sent to the api server
  */
 @Managed
-public interface TopLevelApiObject extends Named {
+public interface TopLevelApiObject extends PreserveOnEmptyAware, Named {
 }

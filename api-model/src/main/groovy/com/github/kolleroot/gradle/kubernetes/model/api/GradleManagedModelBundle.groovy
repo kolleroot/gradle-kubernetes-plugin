@@ -16,10 +16,16 @@
 package com.github.kolleroot.gradle.kubernetes.model.api
 
 import com.owlike.genson.Context
+import com.owlike.genson.Converter
+import com.owlike.genson.Genson
 import com.owlike.genson.GensonBuilder
+import com.owlike.genson.Wrapper
+import com.owlike.genson.convert.ContextualFactory
 import com.owlike.genson.ext.GensonBundle
 import com.owlike.genson.reflect.BeanProperty
 import com.owlike.genson.reflect.RuntimePropertyFilter
+import com.owlike.genson.stream.ObjectReader
+import com.owlike.genson.stream.ObjectWriter
 import org.gradle.api.Named
 import org.gradle.model.internal.core.MutableModelNode
 import org.gradle.model.internal.type.ModelType
@@ -36,11 +42,14 @@ class GradleManagedModelBundle extends GensonBundle {
 
     @Override
     void configure(GensonBuilder builder) {
-        builder.exclude(MutableModelNode)
+        builder.setSkipNull(true)
+                .exclude(MutableModelNode)
                 .exclude(ModelType)
-                .useRuntimeType(true)
-                .setSkipNull(true)
+        // remove the name property, if it exists inside {@link Named}
                 .useRuntimePropertyFilter(NamedNamePropertyFilter.INSTANCE)
+        // preserve all the empty objects, if they are marked
+                .withContextualFactory(new PreserveContextualFactory())
+                .useRuntimeType(true)
     }
 }
 
@@ -50,7 +59,7 @@ class GradleManagedModelBundle extends GensonBundle {
  * {@link com.owlike.genson.annotation.JsonIgnore} doesn't seem to work, if you overwrite the property and add it to
  * the overwritten implementation.
  */
-class NamedNamePropertyFilter implements RuntimePropertyFilter {
+class NamedNamePropertyFilter extends Wrapper implements RuntimePropertyFilter {
 
     public static final NamedNamePropertyFilter INSTANCE = new NamedNamePropertyFilter()
 
@@ -59,6 +68,47 @@ class NamedNamePropertyFilter implements RuntimePropertyFilter {
 
     @Override
     boolean shouldInclude(BeanProperty property, Context ctx) {
-        !(property.name == 'name' && Named.isAssignableFrom(property.concreteClass))
+        boolean include = true
+        include &= !(property.name == 'name' && Named.isAssignableFrom(property.concreteClass))
+        include
+    }
+}
+
+/**
+ * This contextual factory returns a new {@link PreserveConverter} if the property is {@code 'preserve'} from
+ * {@link PreserveOnEmptyAware}.
+ */
+class PreserveContextualFactory implements ContextualFactory<Boolean> {
+
+    @Override
+    Converter<Boolean> create(BeanProperty property, Genson genson) {
+        if (PreserveOnEmptyAware.isAssignableFrom(property.concreteClass) &&
+                property.name == 'preserve') {
+            new PreserveConverter()
+        } else {
+            null
+        }
+    }
+}
+
+/**
+ * This converter realizes the current object stack if the boolean property is true.
+ *
+ * If the underlying {@link ObjectWriter} has not set {@code skipNull} to {@code true},
+ * preserve will be written as null.
+ */
+class PreserveConverter implements Converter<Boolean> {
+
+    @Override
+    void serialize(Boolean object, ObjectWriter writer, Context ctx) throws Exception {
+        if (object && EmptyObjectRemoverJsonWriter.isAssignableFrom(writer.class)) {
+            ((EmptyObjectRemoverJsonWriter) writer).realizeAllEmptyObjects()
+        }
+        writer.writeNull()
+    }
+
+    @Override
+    Boolean deserialize(ObjectReader reader, Context ctx) throws Exception {
+        true
     }
 }
