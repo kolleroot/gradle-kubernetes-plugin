@@ -17,14 +17,22 @@ package com.github.kolleroot.gradle.kubernetes.testbase
 
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.ContainerBuilder
+import io.fabric8.kubernetes.api.model.DoneableServiceAccount
+import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.Namespace
+import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.ServiceAccount
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClientException
+import io.fabric8.kubernetes.client.Watch
+import io.fabric8.kubernetes.client.Watcher
+import io.fabric8.kubernetes.client.dsl.ClientResource
 import org.junit.After
 import org.junit.Before
 
 import java.security.SecureRandom
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
@@ -44,11 +52,26 @@ trait KubernetesTrait {
     @Before
     def kubernetesSetup() {
         kubernetesClient = new DefaultKubernetesClient()
-        kubernetesClient.namespaces().createNew()
+        Namespace ns = new NamespaceBuilder()
                 .withNewMetadata()
                 .withName(namespace)
                 .endMetadata()
-                .done()
+                .build()
+
+        createAndWaitTillReady(ns, 30, TimeUnit.SECONDS)
+
+        CountDownLatch serviceAccountReady = new CountDownLatch(1)
+
+        ClientResource<ServiceAccount, DoneableServiceAccount> sacr = kubernetesClient.serviceAccounts().inNamespace(namespace).withName('default')
+
+        Watch watch = sacr.watch(new ServiceAccountReadinessWatcher(serviceAccountReady))
+
+        if (!sacr.get().secrets.empty) {
+            serviceAccountReady.countDown()
+        }
+
+        serviceAccountReady.await(30, TimeUnit.SECONDS)
+        watch.close()
     }
 
     @After
@@ -58,17 +81,9 @@ trait KubernetesTrait {
         kubernetesClient.close()
     }
 
-    boolean waitTillPodIsReady(String namespace, String podName, long time, TimeUnit unit) {
-        def latch = new CountDownLatch(1)
-        def executor = Executors.newSingleThreadExecutor()
-
-        executor.execute(new PodPoller(kubernetesClient, namespace, podName, latch))
-
-        try {
-            latch.await(time, unit)
-        } finally {
-            executor.shutdown()
-        }
+    void createAndWaitTillReady(HasMetadata hasMetadata, long time, TimeUnit unit) {
+        HasMetadata created = kubernetesClient.resource(hasMetadata).createOrReplace()
+        kubernetesClient.resource(created).waitUntilReady(time, unit)
     }
 
     Container getRegistryContainer(String name, int port) {
@@ -97,34 +112,24 @@ trait KubernetesTrait {
         // @formatter:on
     }
 
-    private static final class PodPoller implements Runnable {
+    static class ServiceAccountReadinessWatcher implements Watcher<ServiceAccount> {
 
-        private final KubernetesClient kubernetesClient
-        private final String namespace
-        private final String podName
         private final CountDownLatch latch
 
-        PodPoller(KubernetesClient kubernetesClient, String namespace, String podName, CountDownLatch latch) {
-            this.kubernetesClient = kubernetesClient
-            this.namespace = namespace
-            this.podName = podName
+        ServiceAccountReadinessWatcher(final CountDownLatch latch) {
             this.latch = latch
         }
 
         @Override
-        void run() {
-            boolean ready = false
-            while (!ready) {
-                def status = kubernetesClient.pods().inNamespace(namespace).withName(podName).get().status
-
-                status.conditions.each { condition ->
-                    if (condition.type == 'Ready' && condition.status == 'True') {
-                        ready = true
-                    }
-                }
+        void eventReceived(Watcher.Action action, ServiceAccount resource) {
+            if (!resource.secrets.empty) {
+                latch.countDown()
             }
+        }
 
-            latch.countDown()
+        @Override
+        void onClose(KubernetesClientException cause) {
+
         }
     }
 }

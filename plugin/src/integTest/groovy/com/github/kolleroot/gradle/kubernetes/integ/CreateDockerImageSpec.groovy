@@ -22,6 +22,8 @@ import com.github.kolleroot.gradle.kubernetes.testbase.DockerHelper
 import com.github.kolleroot.gradle.kubernetes.testbase.DockerTrait
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
 import com.github.kolleroot.gradle.kubernetes.testbase.KubernetesTrait
+import io.fabric8.kubernetes.api.model.Pod
+import io.fabric8.kubernetes.api.model.PodBuilder
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
@@ -91,25 +93,22 @@ class CreateDockerImageSpec extends Specification implements GradleTrait, Docker
     def 'build, tag and push a docker image to a repository in the cluster'() {
         given: 'a registry in the cluster'
         // @formatter:off
-        kubernetesClient.pods()
-                .createNew()
-                    .withNewMetadata()
-                        .withName('registry')
-                        .withNamespace(namespace)
-                    .endMetadata()
-                    .withNewSpec()
-                        .addNewContainerLike(getRegistryContainer('registry', 5050)).endContainer()
-                        .addNewVolume()
-                            .withName('cache-volume')
-                            .withNewEmptyDir()
-                            .endEmptyDir()
-                        .endVolume()
-                    .endSpec()
-                .done()
+        Pod registryPod = new PodBuilder()
+                .withNewMetadata()
+                    .withName('registry')
+                    .withNamespace(namespace)
+                .endMetadata()
+                .withNewSpec()
+                    .addNewContainerLike(getRegistryContainer('registry', 5050)).endContainer()
+                    .addNewVolume()
+                        .withName('cache-volume')
+                        .withNewEmptyDir()
+                        .endEmptyDir()
+                    .endVolume()
+                .endSpec()
+            .build()
         // @formatter:on
-
-        and: 'the registry gets ready'
-        waitTillPodIsReady(namespace, 'registry', 30, TimeUnit.SECONDS)
+        createAndWaitTillReady(registryPod, 30, TimeUnit.SECONDS)
 
         and: 'a gradle file with a model'
         buildFile << """

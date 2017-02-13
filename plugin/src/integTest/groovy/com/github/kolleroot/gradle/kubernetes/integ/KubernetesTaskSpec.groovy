@@ -18,6 +18,7 @@ package com.github.kolleroot.gradle.kubernetes.integ
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
 import com.github.kolleroot.gradle.kubernetes.testbase.KubernetesTrait
 import io.fabric8.kubernetes.api.model.Pod
+import io.fabric8.kubernetes.api.model.PodBuilder
 import io.fabric8.kubernetes.client.KubernetesClientException
 import io.fabric8.kubernetes.client.Watcher
 import org.apache.commons.lang3.StringUtils
@@ -116,7 +117,7 @@ class KubernetesTaskSpec extends Specification implements KubernetesTrait, Gradl
         succeeds 'deletePod'
 
         then: 'wait till the pod is deleted and verify that it is realy deleted'
-        DELETE_LATCH.await(10, TimeUnit.SECONDS)
+        DELETE_LATCH.await(30, TimeUnit.SECONDS)
 
         def pod = kubernetesClient.pods().inNamespace(namespace).withName(TEST_POD).get()
         pod == null
@@ -124,39 +125,30 @@ class KubernetesTaskSpec extends Specification implements KubernetesTrait, Gradl
 
     @SuppressWarnings(['DuplicateStringLiteral', 'DuplicateNumberLiteral', 'MethodSize'])
     def "forward a port from the kubernetes cluster to localhost"() {
-        given: 'a pod in the kubernetes cluster'
-        while (true) {
-            try {
-                // @formatter:off
-                kubernetesClient.pods().withName(namespace).createNew()
-                        .withNewMetadata()
-                            .withName('echo-server')
-                            .withNamespace(namespace)
-                        .endMetadata()
-                        .withNewSpec()
-                            .addNewContainer()
-                                .withName('simple-echo')
-                                .withImage('gcr.io/google-containers/busybox')
-                                .withCommand('nc', '-p', '8080', '-l', '-l', '-e', 'echo', 'hello world!\n')
-                                .withImagePullPolicy('Always')
-                                .addNewPort()
-                                    .withContainerPort(8080)
-                                    .withProtocol('TCP')
-                                    .withName('echo')
-                                .endPort()
-                            .endContainer()
-                        .endSpec()
-                        .done()
-                break
-                // @formatter:on
-            } catch (KubernetesClientException e) {
-                if (!(e.status?.details?.retryAfterSeconds > 0)) {
-                    throw new IllegalStateException('Unable to create simple-echo pod')
-                }
+        given: 'an echo-server pod in the kubernetes cluster'
+        // @formatter:off
+        Pod echoServer = new PodBuilder()
+                .withNewMetadata()
+                    .withName('echo-server')
+                    .withNamespace(namespace)
+                .endMetadata()
+                .withNewSpec()
+                    .addNewContainer()
+                        .withName('simple-echo')
+                        .withImage('gcr.io/google-containers/busybox')
+                        .withCommand('nc', '-p', '8080', '-l', '-l', '-e', 'echo', 'hello world!\n')
+                        .withImagePullPolicy('Always')
+                        .addNewPort()
+                            .withContainerPort(8080)
+                            .withProtocol('TCP')
+                            .withName('echo')
+                        .endPort()
+                    .endContainer()
+                .endSpec()
+                .build()
+        // @formatter:on
+        createAndWaitTillReady(echoServer, 30, TimeUnit.SECONDS)
 
-                Thread.sleep(e.status.details.retryAfterSeconds * 1000L)
-            }
-        }
         and: 'a gradle file opening and closing the port'
         buildFile << """
         import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
