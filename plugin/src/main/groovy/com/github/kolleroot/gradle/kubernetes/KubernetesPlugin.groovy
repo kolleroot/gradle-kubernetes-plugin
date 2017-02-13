@@ -24,8 +24,10 @@ import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounte
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
+import com.github.kolleroot.gradle.kubernetes.model.KubernetesObjectContainer
 import com.github.kolleroot.gradle.kubernetes.model.internal.DockerRegistryTaskName
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesClosePortForwardTask
+import com.github.kolleroot.gradle.kubernetes.task.KubernetesModelSerializerTask
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -57,11 +59,15 @@ class KubernetesPlugin implements Plugin<Project> {
     static final String KUBERNETES_DOCKERFILES_TASK = 'kubernetesDockerfiles'
     static final String KUBERNETES_DOCKER_BUILD_IMAGES_TASK = 'kubernetesDockerBuildImages'
     static final String KUBERNETES_DOCKER_PUSH_IMAGES_TASK = 'kubernetesDockerPushImages'
+    static final String KUBERNETES_GENERATE_OBJECTS_TASK = 'kubernetesGenerateObjects'
 
     static final String KUBERNETES_DOCKERFILE_BASE = 'kubernetesDockerfile'
     static final String KUBERNETES_DOCKER_BUILD_IMAGE_BASE = 'kubernetesDockerBuildImage'
     static final String KUBERNETES_DOCKER_TAG_BASE = 'kubernetesDockerTag'
     static final String KUBERNETES_DOCKER_PUSH_BASE = 'kubernetesDockerPush'
+    static final String KUBERNETES_OBJECT_GENERATE_BASE = 'kubernetesGenerateObject'
+
+    static final String KUBERNETES_GENERATE_OBJECT_DIR = 'kubernetesObjects'
 
     @Override
     void apply(Project project) {
@@ -99,6 +105,15 @@ class KubernetesPlugin implements Plugin<Project> {
             tasks.create KUBERNETES_DOCKER_BUILD_IMAGES_TASK, {
                 group = KUBERNETES_GROUP
                 description = 'Build all docker images'
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Defaults
+        void addDefaultKubernetesObjectsTask(ModelMap<Task> tasks) {
+            tasks.create KUBERNETES_GENERATE_OBJECTS_TASK, {
+                group = KUBERNETES_GROUP
+                description = 'Generate all kubernetes objects'
             }
         }
 
@@ -234,6 +249,25 @@ class KubernetesPlugin implements Plugin<Project> {
                         dependsOn tagTask
                     }
                 }
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Mutate
+        void addKubernetesObjectGeneratorTasks(
+                ModelMap<Task> tasks,
+                @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
+                @Path('buildDir') File buildDir,
+                @Path('tasks.kubernetesGenerateObjects') Task kubernetesObjectsTask) {
+            kubernetesObjects.each { kubernetesObject ->
+                String taskName = KUBERNETES_OBJECT_GENERATE_BASE + kubernetesObject.name.capitalize()
+                tasks.create taskName, KubernetesModelSerializerTask, {
+                    object = kubernetesObject
+                    jsonFile = "$buildDir/$KUBERNETES_GENERATE_OBJECT_DIR/${kubernetesObject.name}.json"
+                }
+
+                Task kubernetesObjectTask = tasks.get(taskName)
+                kubernetesObjectsTask.dependsOn kubernetesObjectTask
             }
         }
 
