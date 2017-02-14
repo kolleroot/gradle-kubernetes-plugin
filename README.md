@@ -1,8 +1,20 @@
-Gradle-Kubernetes Plugin
+Gradle Kubernetes Plugin
 ========================
 
 The purpose of the `gradle-kubernetes-plugin` is to improve the development
 process of creating and deploying kubernetes applications.
+
+## Requirements
+This plugin requires a valid docker installation, credentials for a kubernetes
+cluster and the kubernetes client tools to work properly.
+
+The docker installation is required to build, tag and push your application
+to a docker registry, the credentials are used to communicate with the cluster
+and the kubernetes client (`kubectl`) is required to `port-forward` to the
+docker registry in the cluster.
+
+The credentials are expected to be at `$HOME/.kube/config`, the default
+location for the kubernetes credentials.
 
 ## Usage
 This plugin is available via the gradle plugin repository.
@@ -30,8 +42,6 @@ plugins {
   id "com.github.kolleroot.gradle.kubernetes" version "0.1.0"
 }
 ```
-
-## Usage
 
 This plugin uses the new rule based model configuration mechanism in gradle
 ([link](https://docs.gradle.org/current/userguide/software_model.html)). If
@@ -114,7 +124,7 @@ pushed to the docker registry `localhost:5000` and a kubernetes pod named
   and numbers and the one with objects like `V1Container`.
   
     * Primitive arrays:
-    `externalIPs = ["192.168.2.100", "192.168.2.101"]`
+        `externalIPs = ["192.168.2.100", "192.168.2.101"]`
   
     * Object arrays:
         ```groovy
@@ -129,8 +139,23 @@ pushed to the docker registry `localhost:5000` and a kubernetes pod named
             }
         }
         ```
-* There are also two types of maps with similar differeinces like the arrays.
+* There are also two types of maps with similar differences. They are too
+divided into primitive and object maps.
+    * Primitive maps:
+        `labels = [app: 'RestApi', 'env': 'production']`
+    
+    * Object maps:
+        ```groovy
+        kubernetesObjects {
+            'rest-api-deployment'(V1beta1Deployment) {
+                ...
+            }
+        }
+        ```
+        Quotation marks are only required, if the name isn't a valid method
+        name in groovy.
 
 ## License
 
-This plugin is made available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0).
+This plugin is made available under the
+[Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0).
