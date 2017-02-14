@@ -101,6 +101,36 @@ model {
 }
 ```
 
+This minimalistic example defines a docker image `simpleImage` which will be
+pushed to the docker registry `localhost:5000` and a kubernetes pod named
+`simpleApplication`.
+
+### Caveats
+* When creating a kubernetes api object, you have to specify the tpye of the
+  object. All these objects are in the package `com.github.kolleroot.gradle.kubernetes.model.api`
+  and have a class name in the following format: `VersionKind` like `V1Pod` and
+  `V1beta1Deployment`.
+* There are two types of arrays: the one with primitive elements like strings
+  and numbers and the one with objects like `V1Container`.
+  
+    * Primitive arrays:
+    `externalIPs = ["192.168.2.100", "192.168.2.101"]`
+  
+    * Object arrays:
+        ```groovy
+        containers {
+            create {
+                name = "main"
+                ...
+            }
+            create {
+                name = "backup"
+                ...
+            }
+        }
+        ```
+* There are also two types of maps with similar differeinces like the arrays.
+
 ## License
 
 This plugin is made available under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0).
