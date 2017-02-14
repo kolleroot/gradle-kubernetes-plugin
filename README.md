@@ -20,6 +20,7 @@ location for the kubernetes credentials.
 This plugin is available via the gradle plugin repository.
 
 Build script snippet for use in **all** Gradle versions:
+
 ```groovy
 buildscript {
   repositories {
@@ -116,6 +117,7 @@ pushed to the docker registry `localhost:5000` and a kubernetes pod named
 `simpleApplication`.
 
 ### Caveats
+
 * When creating a kubernetes api object, you have to specify the tpye of the
   object. All these objects are in the package `com.github.kolleroot.gradle.kubernetes.model.api`
   and have a class name in the following format: `VersionKind` like `V1Pod` and
@@ -124,9 +126,11 @@ pushed to the docker registry `localhost:5000` and a kubernetes pod named
   and numbers and the one with objects like `V1Container`.
   
     * Primitive arrays:
+    
         `externalIPs = ["192.168.2.100", "192.168.2.101"]`
   
     * Object arrays:
+    
         ```groovy
         containers {
             create {
@@ -142,9 +146,11 @@ pushed to the docker registry `localhost:5000` and a kubernetes pod named
 * There are also two types of maps with similar differences. They are too
 divided into primitive and object maps.
     * Primitive maps:
+    
         `labels = [app: 'RestApi', 'env': 'production']`
     
     * Object maps:
+    
         ```groovy
         kubernetesObjects {
             'rest-api-deployment'(V1beta1Deployment) {
@@ -152,6 +158,7 @@ divided into primitive and object maps.
             }
         }
         ```
+        
         Quotation marks are only required, if the name isn't a valid method
         name in groovy.
 
