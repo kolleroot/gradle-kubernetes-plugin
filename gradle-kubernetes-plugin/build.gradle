@@ -1,7 +1,7 @@
 plugins {
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'maven-publish'
+    // id 'maven-publish'
     id 'codenarc'
 }
 
@@ -48,14 +48,15 @@ codenarcIntegTest {
     configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
 }
 
+/*
 publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId 'com.github.kolleroot.gradle'
             artifactId 'gradle-kubernetes-plugin'
-            version '0.1'
+            version '0.1.0'
 
             from components.java
         }
     }
-}
+}*/

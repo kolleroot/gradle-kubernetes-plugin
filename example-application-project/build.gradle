@@ -1,7 +1,30 @@
-plugins {
-    id 'application'
+import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
+
+buildscript {
+    repositories {
+        /*
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }*/
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.kolleroot.gradle:gradle-kubernetes-plugin:0.1.0'
+    }
 }
+apply plugin: 'application'
+apply plugin: 'com.github.kolleroot.gradle.kubernetes'
 
-version = "1.0"
+version = '1.0'
 
-mainClassName = "com.github.kolleroot.gradle.kubernetes.example.application.ExampleApp"
+mainClassName = 'com.github.kolleroot.gradle.kubernetes.example.application.ExampleApp'
+
+model {
+    kubernetes {
+        dockerImages {
+            simple(DefaultDockerImage) {
+                from 'openjdk:8-jdk'
+            }
+        }
+    }
+}
