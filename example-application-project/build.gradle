@@ -1,4 +1,6 @@
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
+import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
+import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
 
 buildscript {
     repositories {
@@ -24,6 +26,41 @@ model {
         dockerImages {
             simple(DefaultDockerImage) {
                 from 'openjdk:8-jdk'
+            }
+        }
+
+        dockerRegistries {
+            'localhost:5000'(KubernetesLocalDockerRegistry) {
+                namespace = 'docker'
+                pod = 'registry'
+                port = '5000:5000'
+            }
+        }
+
+        kubernetesObjects {
+            simpleApplication(V1Pod) {
+                apiVersion = 'v1'
+                kind = 'Pod'
+                metadata {
+                    name = 'test'
+                }
+                spec {
+                    containers {
+                        create {
+                            image = 'localhost:5000/simple'
+                            volumeMounts.create {
+                                name = 'data'
+                                mountPath = '/data'
+                            }
+                        }
+                    }
+                    volumes {
+                        create {
+                            name = 'data'
+                            emptyDir { preserve = true }
+                        }
+                    }
+                }
             }
         }
     }
