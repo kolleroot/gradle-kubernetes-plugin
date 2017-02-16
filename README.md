@@ -44,10 +44,12 @@ plugins {
 }
 ```
 
-This plugin uses the new rule based model configuration mechanism in gradle
-([link](https://docs.gradle.org/current/userguide/software_model.html)). If
-you aren't familiar with this technique, it shouldn't be any problem. But
-there are a view caveats.
+## Example
+
+This _minimalistic_ example defines a docker image `simpleImage` which will be
+pushed to the docker registry `localhost:5000` and a kubernetes pod named
+`simpleApplication`. This is currently as minimalistic, as possible, but I hope
+that in the future there will be more automated configuration and less typing.
 
 ```groovy
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
@@ -112,16 +114,24 @@ model {
 }
 ```
 
-This minimalistic example defines a docker image `simpleImage` which will be
-pushed to the docker registry `localhost:5000` and a kubernetes pod named
-`simpleApplication`.
-
 ### Caveats
+This plugin uses the new rule based model configuration mechanism in gradle
+([link](https://docs.gradle.org/current/userguide/software_model.html)). If
+you aren't familiar with this technique, it shouldn't be any problem. But
+there are a view caveats.
 
-* When creating a kubernetes api object, you have to specify the tpye of the
+* When creating a kubernetes api object, you have to specify the type of the
   object. All these objects are in the package `com.github.kolleroot.gradle.kubernetes.model.api`
   and have a class name in the following format: `VersionKind` like `V1Pod` and
   `V1beta1Deployment`.
+
+* The kubernetes api sometimes uses empty objects to represent, that an object
+  was set but has no explicit properties. Gradle on the other hand can't
+  distinguish between configured and unconfigured objects, as far as I know.
+  To resolv this issue you have to set the boolean property `preserve` to
+  `true`. This property won't be in the final JSON but tells the serializer to
+  preserve this empty object.
+
 * There are two types of arrays: the one with primitive elements like strings
   and numbers and the one with objects like `V1Container`.
   
