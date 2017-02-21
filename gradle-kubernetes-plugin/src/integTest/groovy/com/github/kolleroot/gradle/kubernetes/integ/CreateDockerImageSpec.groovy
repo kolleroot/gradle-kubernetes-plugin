@@ -72,7 +72,7 @@ class CreateDockerImageSpec extends Specification implements GradleTrait, Docker
         """.stripIndent().trim()
 
         when: 'the docker build task ran'
-        succeeds 'kubernetesDockerBuildImageSimple'
+        succeeds 'buildDockerImageSimple'
 
         and: 'got image details'
         def imageDetails = inspectImage 'simple:latest'
@@ -146,7 +146,7 @@ class CreateDockerImageSpec extends Specification implements GradleTrait, Docker
         """.stripIndent().trim()
 
         when: 'the gradle build succeeded'
-        succeeds 'kubernetesDockerPushLocalhost5050Simple'
+        succeeds 'pushDockerImageLocalhost5050Simple'
 
         and: 'the image id is available'
         def imageId = inspectImage('simple:latest').id

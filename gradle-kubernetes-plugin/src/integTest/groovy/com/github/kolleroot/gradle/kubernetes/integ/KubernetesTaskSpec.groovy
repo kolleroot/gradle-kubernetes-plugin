@@ -117,7 +117,7 @@ class KubernetesTaskSpec extends Specification implements KubernetesTrait, Gradl
         succeeds 'deletePod'
 
         then: 'wait till the pod is deleted and verify that it is realy deleted'
-        DELETE_LATCH.await(30, TimeUnit.SECONDS)
+        DELETE_LATCH.await(60, TimeUnit.SECONDS)
 
         def pod = kubernetesClient.pods().inNamespace(namespace).withName(TEST_POD).get()
         pod == null
@@ -239,9 +239,10 @@ class KubernetesTaskSpec extends Specification implements KubernetesTrait, Gradl
             containers:
               - name: a-container
                 image: openjdk:8-jdk-alpine
-                command:
-                  - "sh"
-                  - "-c \\"java -version; while true; do echo -n '. '; sleep 1; done\\""
+                command: ["/bin/sh"]
+                args:
+                  - "-c"
+                  - "java -version; while true; do echo '. '; sleep 1; done"
         """.stripIndent().trim()
     }
 }

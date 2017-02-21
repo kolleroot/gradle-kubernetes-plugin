@@ -27,6 +27,8 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
+import java.util.concurrent.TimeUnit
+
 /**
  * A base task for kubernetes tasks
  */
@@ -42,8 +44,16 @@ abstract class KubernetesTask extends DefaultTask {
 }
 
 abstract class KubernetesLoadedTask extends KubernetesTask {
+    private File configFile
+
     @InputFile
-    File configFile
+    File getConfigFile() {
+        configFile
+    }
+
+    void setConfigFile(Object file) {
+        configFile = project.file(file)
+    }
 
     @Override
     protected void kubernetesAction(KubernetesClient client) {
@@ -55,10 +65,19 @@ abstract class KubernetesLoadedTask extends KubernetesTask {
 }
 
 class KubernetesCreate extends KubernetesLoadedTask {
+
+    @Optional
+    @Internal
+    long amount = 30
+
+    @Optional
+    @Internal
+    TimeUnit timeUnit = TimeUnit.SECONDS
+
     @Override
     void kubernetesLoadedAction(
             NamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean> loaded) {
-        loaded.createOrReplace()
+        loaded.createOrReplaceAnd().waitUntilReady(amount, timeUnit)
     }
 }
 

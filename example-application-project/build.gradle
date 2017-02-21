@@ -25,14 +25,15 @@ model {
     kubernetes {
         dockerImages {
             simple(DefaultDockerImage) {
-                from 'openjdk:8-jdk'
+                // from 'openjdk:8-jdk'
+                from 'alpine:3.5'
             }
         }
 
         dockerRegistries {
             'localhost:5000'(KubernetesLocalDockerRegistry) {
-                namespace = 'docker'
-                pod = 'registry'
+                namespace = 'kube-system'
+                pod = 'kube-registry-1640093215-3o399'
                 port = '5000:5000'
             }
         }
@@ -43,10 +44,12 @@ model {
                 kind = 'Pod'
                 metadata {
                     name = 'test'
+                    namespace = 'default'
                 }
                 spec {
                     containers {
                         create {
+                            name = 'test-container'
                             image = 'localhost:5000/simple'
                             volumeMounts.create {
                                 name = 'data'
