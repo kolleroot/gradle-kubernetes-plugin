@@ -40,6 +40,7 @@ class PortForwardRegistry {
 
         if (closeable != null) {
             closeable.close()
+            CLOSEABLES.remove(id)
         } else {
             LOGGER.warn('There is no closeable with id {}', id)
         }

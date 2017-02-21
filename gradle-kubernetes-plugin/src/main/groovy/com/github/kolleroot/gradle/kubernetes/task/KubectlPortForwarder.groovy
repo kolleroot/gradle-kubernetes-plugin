@@ -70,6 +70,8 @@ class KubectlPortForwarder implements Closeable {
         this.pod = pod
         this.port = port
 
+        LOGGER.debug String.format(CMD_BASE, namespace, pod, port)
+
         process = new ProcessBuilder(String.format(CMD_BASE, namespace, pod, port).split())
                 .start()
         waitTillReady()

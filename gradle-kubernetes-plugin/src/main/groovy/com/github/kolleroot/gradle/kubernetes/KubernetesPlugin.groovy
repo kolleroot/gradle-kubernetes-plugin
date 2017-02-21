@@ -21,19 +21,21 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.helper.DockerImageFileBundleCounter
+import com.github.kolleroot.gradle.kubernetes.helper.TaskNameHelper
 import com.github.kolleroot.gradle.kubernetes.model.DockerImage
 import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
 import com.github.kolleroot.gradle.kubernetes.model.KubernetesObjectContainer
 import com.github.kolleroot.gradle.kubernetes.model.internal.DockerRegistryTaskName
+import com.github.kolleroot.gradle.kubernetes.rule.DefaultTasks
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesClosePortForwardTask
+import com.github.kolleroot.gradle.kubernetes.task.KubernetesCreate
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesModelSerializerTask
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.bundling.Zip
-import org.gradle.model.Defaults
 import org.gradle.model.Each
 import org.gradle.model.Finalize
 import org.gradle.model.Model
@@ -41,6 +43,7 @@ import org.gradle.model.ModelMap
 import org.gradle.model.Mutate
 import org.gradle.model.Path
 import org.gradle.model.RuleSource
+import org.gradle.model.Rules
 import org.gradle.model.Validate
 import org.gradle.model.internal.core.Hidden
 
@@ -62,18 +65,14 @@ class KubernetesPlugin implements Plugin<Project> {
     static final String KUBERNETES_DOCKER_TAG_IMAGES_TASK = 'tagDockerImages'
     static final String KUBERNETES_DOCKER_PUSH_IMAGES_TASK = 'pushDockerImages'
     static final String KUBERNETES_GENERATE_OBJECTS_TASK = 'generateKubernetesObjects'
+    static final String KUBERNETES_CREATE_OBJECTS_TASK = 'createKubernetesObjects'
 
-    static final String KUBERNETES_DOCKERFILE_BASE = 'dockerfile'
-    static final String KUBERNETES_DOCKER_BUILD_IMAGE_BASE = 'buildDockerImage'
-    static final String KUBERNETES_DOCKER_TAG_BASE = 'tagDockerImage'
-    static final String KUBERNETES_DOCKER_PUSH_BASE = 'pushDockerImage'
-    static final String KUBERNETES_OBJECT_GENERATE_BASE = 'generateKubernetesObject'
 
     @Override
     void apply(Project project) {
         project.apply plugin: DockerRemoteApiPlugin
 
-        // this is probably realy not the best way to do it, but ...
+        // this is probably not the best way to do it, but ...
         DockerImageFileBundleCounter.COUNTER.set(0)
     }
 
@@ -90,49 +89,8 @@ class KubernetesPlugin implements Plugin<Project> {
         void kubernetesDockerRegistryTaskNames(ModelMap<DockerRegistryTaskName> map) {
         }
 
-        @SuppressWarnings('GrMethodMayBeStatic')
-        @Defaults
-        void addDefaultDockerfileTask(ModelMap<Task> tasks) {
-            tasks.create KUBERNETES_DOCKERFILES_TASK, {
-                group = DOCKER_GROUP
-                description = 'Create all Dockerfiles for the images'
-            }
-        }
-
-        @SuppressWarnings('GrMethodMayBeStatic')
-        @Defaults
-        void addDefaultBuildDockerImagesTask(ModelMap<Task> tasks) {
-            tasks.create KUBERNETES_DOCKER_BUILD_IMAGES_TASK, {
-                group = DOCKER_GROUP
-                description = 'Build all docker images'
-            }
-        }
-
-        @SuppressWarnings('GrMethodMayBeStatic')
-        @Defaults
-        void addDefaultTagDockerImagesTask(ModelMap<Task> tasks) {
-            tasks.create KUBERNETES_DOCKER_TAG_IMAGES_TASK, {
-                group = DOCKER_GROUP
-                description = 'Tag all docker images'
-            }
-        }
-
-        @SuppressWarnings('GrMethodMayBeStatic')
-        @Defaults
-        void addDefaultPushDockerImagesTask(ModelMap<Task> tasks) {
-            tasks.create KUBERNETES_DOCKER_PUSH_IMAGES_TASK, {
-                group = DOCKER_GROUP
-                description = 'Push all docker images'
-            }
-        }
-
-        @SuppressWarnings('GrMethodMayBeStatic')
-        @Defaults
-        void addDefaultKubernetesObjectsTask(ModelMap<Task> tasks) {
-            tasks.create KUBERNETES_GENERATE_OBJECTS_TASK, {
-                group = KUBERNETES_GROUP
-                description = 'Generate all kubernetes objects'
-            }
+        @Rules
+        void addDefaultTasks(DefaultTasks defaultRules, ModelMap<Task> tasks) {
         }
 
         @Mutate
@@ -195,8 +153,7 @@ class KubernetesPlugin implements Plugin<Project> {
 
                 List<Task> zipTasks = []
                 dockerImage.bundles.each { bundle ->
-                    String zipTaskName = KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize() +
-                            "${bundle.bundleName.split(/\./)[0].replace('-', '').capitalize()}"
+                    String zipTaskName = TaskNameHelper.getDockerfileZipTaskName(dockerImage, bundle)
                     tasks.create zipTaskName, Zip, {
                         archiveName bundle.bundleName
                         destinationDir Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
@@ -205,13 +162,14 @@ class KubernetesPlugin implements Plugin<Project> {
                     // apply the spec from the model to the zipTask
                     Zip zipTask = tasks.get(zipTaskName) as Zip
                     bundle.spec.delegate = zipTask
+                    //noinspection UnnecessaryQualifiedReference
                     bundle.spec.resolveStrategy = Closure.DELEGATE_FIRST
                     bundle.spec.call()
 
                     zipTasks << zipTask
                 }
 
-                String dockerfileTaskName = KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize()
+                String dockerfileTaskName = TaskNameHelper.getDockerfileTaskName(dockerImage)
                 tasks.create dockerfileTaskName, Dockerfile, {
                     group = DOCKER_GROUP
                     description = "Create the Dockerfile for the image ${dockerImage.name}"
@@ -225,7 +183,7 @@ class KubernetesPlugin implements Plugin<Project> {
                 Dockerfile dockerfileTask = tasks.get(dockerfileTaskName) as Dockerfile
                 dockerfilesTask.dependsOn dockerfileTask
 
-                String dockerBuildImageTaskName = KUBERNETES_DOCKER_BUILD_IMAGE_BASE + dockerImage.name.capitalize()
+                String dockerBuildImageTaskName = TaskNameHelper.getBuildTaskName(dockerImage)
                 tasks.create dockerBuildImageTaskName, DockerBuildImage, {
                     group = DOCKER_GROUP
                     description = "Create the docker image from the Dockerfile for the image ${dockerImage.name}"
@@ -252,14 +210,13 @@ class KubernetesPlugin implements Plugin<Project> {
                                    @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerRegistries.each { dockerRegistry ->
                 dockerImages.each { dockerImage ->
-                    String tagTaskName = KUBERNETES_DOCKER_TAG_BASE +
-                            dockerRegistry.name.capitalize() +
-                            dockerImage.name.capitalize()
+                    String tagTaskName = TaskNameHelper.getTagTaskName(dockerRegistry, dockerImage)
 
                     tasks.create tagTaskName,
                             DockerTagImage, {
                         group = DOCKER_GROUP
-                        description = "Tag the image ${dockerImage.name} with ${dockerRegistry.registry}/${dockerImage.name}"
+                        description =
+                                "Tag the image ${dockerImage.name} with ${dockerRegistry.registry}/${dockerImage.name}"
 
                         repository = dockerRegistry.registry + '/' + dockerImage.name
                         targetImageId { dockerImage.name }
@@ -270,9 +227,7 @@ class KubernetesPlugin implements Plugin<Project> {
                     Task tagTask = tasks.get(tagTaskName)
                     tagDockerImagesTask.dependsOn tagTask
 
-                    String pushTaskName = KUBERNETES_DOCKER_PUSH_BASE +
-                            dockerRegistry.name.capitalize() +
-                            dockerImage.name.capitalize()
+                    String pushTaskName = TaskNameHelper.getPushTaskName(dockerRegistry, dockerImage)
 
                     tasks.create pushTaskName,
                             DockerPushImage, {
@@ -298,7 +253,8 @@ class KubernetesPlugin implements Plugin<Project> {
                 @Path('buildDir') File buildDir,
                 @Path('tasks.generateKubernetesObjects') Task kubernetesObjectsTask) {
             kubernetesObjects.each { kubernetesObject ->
-                String taskName = KUBERNETES_OBJECT_GENERATE_BASE + kubernetesObject.name.capitalize()
+                String taskName = TaskNameHelper.getGenerateTaskName(kubernetesObject)
+
                 tasks.create taskName, KubernetesModelSerializerTask, {
                     group = KUBERNETES_GROUP
                     description = "Serialize the kubernetes object ${kubernetesObject.name}"
@@ -313,17 +269,38 @@ class KubernetesPlugin implements Plugin<Project> {
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
+        @Mutate
+        void addKubernetesCreateTask(
+                ModelMap<Task> tasks,
+                @Path('tasks.createKubernetesObjects') Task createKubernetesObjectsTask,
+                @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
+                @Path('buildDir') File buildDir
+        ) {
+            kubernetesObjects.each { kubernetesObject ->
+                String createTaskName = TaskNameHelper.getCreateTaskName(kubernetesObject)
+
+                tasks.create createTaskName, KubernetesCreate, {
+                    group = KUBERNETES_GROUP
+                    description = "Create the kubernetes object ${kubernetesObject.name} in the cluster"
+
+                    configFile = "$buildDir/kubernetes/objects/${kubernetesObject.name}.json"
+                }
+
+                Task createTask = tasks.get(createTaskName)
+                createKubernetesObjectsTask.dependsOn createTask
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
         @Finalize
         void connectBuildToTag(ModelMap<Task> tasks,
                                ModelMap<DockerRegistryTaskName> dockerRegistries,
                                @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerRegistries.each { dockerRegistry ->
                 dockerImages.each { dockerImage ->
-                    String dockerBuildImageTaskName = KUBERNETES_DOCKER_BUILD_IMAGE_BASE + dockerImage.name.capitalize()
+                    String dockerBuildImageTaskName = TaskNameHelper.getBuildTaskName(dockerImage)
 
-                    String tagTaskName = KUBERNETES_DOCKER_TAG_BASE +
-                            dockerRegistry.name.capitalize() +
-                            dockerImage.name.capitalize()
+                    String tagTaskName = TaskNameHelper.getTagTaskName(dockerRegistry, dockerImage)
 
                     Task tagTask = tasks.get(tagTaskName)
                     Task buildTask = tasks.get(dockerBuildImageTaskName)
@@ -336,13 +313,12 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Finalize
         void connectPushWithOpenAndClose(ModelMap<Task> tasks,
+                                         @Path('tasks.pushDockerImages') pushDockerImagesTask,
                                          ModelMap<DockerRegistryTaskName> dockerRegistries,
                                          @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerRegistries.each { dockerRegistry ->
                 dockerImages.each { dockerImage ->
-                    String pushTaskName = KUBERNETES_DOCKER_PUSH_BASE +
-                            dockerRegistry.name.capitalize() +
-                            dockerImage.name.capitalize()
+                    String pushTaskName = TaskNameHelper.getPushTaskName(dockerRegistry, dockerImage)
 
                     Task push = tasks.get(pushTaskName)
                     Task open = tasks.get(dockerRegistry.openTaskName)
@@ -350,6 +326,40 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     push.dependsOn open
                     push.finalizedBy close
+
+                    pushDockerImagesTask.dependsOn close
+                }
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Finalize
+        void connectCreateObjectWithGenerateObject(ModelMap<Task> tasks,
+                                                   @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects) {
+            kubernetesObjects.each { kubernetesObject ->
+                Task generateTask = tasks.get(TaskNameHelper.getGenerateTaskName(kubernetesObject))
+                Task createTask = tasks.get(TaskNameHelper.getCreateTaskName(kubernetesObject))
+
+                createTask.dependsOn generateTask
+            }
+        }
+
+        @SuppressWarnings('GrMethodMayBeStatic')
+        @Finalize
+        void connectCreateObjectWithPush(ModelMap<Task> tasks,
+                                         @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
+                                         ModelMap<DockerRegistryTaskName> dockerRegistries,
+                                         @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
+            kubernetesObjects.each { kubernetesObject ->
+                Task createTask = tasks.get(TaskNameHelper.getCreateTaskName(kubernetesObject))
+
+                dockerRegistries.each { dockerRegistry ->
+                    dockerImages.each { dockerImage ->
+                        String pushTaskName = TaskNameHelper.getPushTaskName(dockerRegistry, dockerImage)
+
+                        Task pushTask = tasks.get(pushTaskName)
+                        createTask.dependsOn pushTask
+                    }
                 }
             }
         }

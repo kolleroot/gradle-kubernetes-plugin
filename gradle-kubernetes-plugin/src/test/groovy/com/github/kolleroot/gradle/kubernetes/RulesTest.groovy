@@ -184,9 +184,9 @@ class RulesTest extends Specification implements GradleProjectTrait {
         def tasks = tasksFromModel()
 
         then:
-        def summaryTask = tasks.getByName('kubernetesDockerfiles')
+        def summaryTask = tasks.getByName(KubernetesPlugin.KUBERNETES_DOCKERFILES_TASK)
         summaryTask != null
-        summaryTask.group == 'Kubernetes'
+        summaryTask.group == KubernetesPlugin.DOCKER_GROUP
         summaryTask.description == 'Create all Dockerfiles for the images'
     }
 
@@ -210,15 +210,15 @@ class RulesTest extends Specification implements GradleProjectTrait {
         def tasks = tasksFromModel()
 
         then:
-        def task = tasks.findByName('kubernetesDockerfileSimpleImage')
+        def task = tasks.findByName('dockerfileSimpleImage')
         task instanceof Dockerfile
 
         task.description == 'Create the Dockerfile for the image simpleImage'
-        task.group == 'Kubernetes'
+        task.group == KubernetesPlugin.DOCKER_GROUP
 
         (task as Dockerfile).instructions.size() > 0
 
-        def summaryTask = tasks.getByName('kubernetesDockerfiles')
+        def summaryTask = tasks.getByName(KubernetesPlugin.KUBERNETES_DOCKERFILES_TASK)
         summaryTask.dependsOn.contains task
     }
 
@@ -284,8 +284,8 @@ class RulesTest extends Specification implements GradleProjectTrait {
         def tasks = tasksFromModel()
 
         then:
-        Task something0 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter}")
-        Task something1 = tasks.findByName("kubernetesDockerfileSimpleImageSomething${baseCounter + 1}")
+        Task something0 = tasks.findByName("dockerfileSimpleImageSomething${baseCounter}")
+        Task something1 = tasks.findByName("dockerfileSimpleImageSomething${baseCounter + 1}")
 
         something0 instanceof Zip
         something1 instanceof Zip
@@ -326,16 +326,16 @@ class RulesTest extends Specification implements GradleProjectTrait {
         def tasks = tasksFromModel()
 
         then:
-        Dockerfile dockerfileSimpleImage = tasks.findByName('kubernetesDockerfileSimpleImage') as Dockerfile
-        Zip dockerfileSimpleImageRoot0 = tasks.findByName("kubernetesDockerfileSimpleImageRoot${baseCounter}") as Zip
+        Dockerfile dockerfileSimpleImage = tasks.findByName('dockerfileSimpleImage') as Dockerfile
+        Zip dockerfileSimpleImageRoot0 = tasks.findByName("dockerfileSimpleImageRoot${baseCounter}") as Zip
         Zip dockerfileSimpleImageHome1 =
-                tasks.findByName("kubernetesDockerfileSimpleImageHome${baseCounter + 1}") as Zip
-        Task dockerBuildImageTask = tasks.findByName('kubernetesDockerBuildImageSimpleImage')
-        Task dockerBuildImagesTask = tasks.findByName('kubernetesDockerBuildImages')
+                tasks.findByName("dockerfileSimpleImageHome${baseCounter + 1}") as Zip
+        Task buildDockerImageTask = tasks.findByName('buildDockerImageSimpleImage')
+        Task buildDockerImagesTask = tasks.findByName(KubernetesPlugin.KUBERNETES_DOCKER_BUILD_IMAGES_TASK)
 
-        dockerBuildImageTask instanceof DockerBuildImage
+        buildDockerImageTask instanceof DockerBuildImage
 
-        dockerBuildImageTask.inputs.files.toList() ==
+        buildDockerImageTask.inputs.files.toList() ==
                 [
                         dockerfileSimpleImage.destFile,
                         dockerfileSimpleImageRoot0.archivePath,
@@ -343,6 +343,6 @@ class RulesTest extends Specification implements GradleProjectTrait {
                 ]
 
         // depend on collective build images task
-        dockerBuildImagesTask.dependsOn.contains dockerBuildImageTask
+        buildDockerImagesTask.dependsOn.contains buildDockerImageTask
     }
 }

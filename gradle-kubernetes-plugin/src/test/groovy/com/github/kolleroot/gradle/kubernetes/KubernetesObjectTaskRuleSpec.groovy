@@ -64,11 +64,11 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
         """.stripIndent().trim()
 
         when: 'the task :kubernetesGenerateObjectMyApp succeeds'
-        succeeds(':kubernetesGenerateObjectMyApp')
+        succeeds(':generateKubernetesObjectMyApp')
 
         then: 'there exists a file in the build folder'
 
-        File json = new File(buildFolder.root, '/build/kubernetesObjects/myApp.json')
+        File json = new File(buildFolder.root, '/build/kubernetes/objects/myApp.json')
         json.text == '{"apiVersion":"v1beta1","kind":"Deployment",' +
                 '"metadata":{"name":"MyApp","namespace":"test"},' +
                 '"spec":{"replicas":1,"template":{"spec":{"containers":[{"image":"ubuntu:yakety","name":"main"}]}}}' +
@@ -123,11 +123,11 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
         """.stripIndent().trim()
 
         when: 'the task :kubernetesObjects succeeds'
-        succeeds(':kubernetesGenerateObjects')
+        succeeds(':generateKubernetesObjects')
 
         then: 'both generate tasks are executed successfuly'
-        buildResult.task(':kubernetesGenerateObjectPod1').outcome == TaskOutcome.SUCCESS
-        buildResult.task(':kubernetesGenerateObjectPod2').outcome == TaskOutcome.SUCCESS
+        buildResult.task(':generateKubernetesObjectPod1').outcome == TaskOutcome.SUCCESS
+        buildResult.task(':generateKubernetesObjectPod2').outcome == TaskOutcome.SUCCESS
 
         and: 'there exist files in the build folder'
         final String POD_N = '{"apiVersion":"v1","kind":"Pod",' +
@@ -135,10 +135,10 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
                 '"spec":{"containers":[{"image":"ubuntu:yakety","name":"main"}]}' +
                 '}'
 
-        File pod1File = new File(buildFolder.root, '/build/kubernetesObjects/pod1.json')
+        File pod1File = new File(buildFolder.root, '/build/kubernetes/objects/pod1.json')
         pod1File.text == String.format(POD_N, 1)
 
-        File pod2File = new File(buildFolder.root, '/build/kubernetesObjects/pod2.json')
+        File pod2File = new File(buildFolder.root, '/build/kubernetes/objects/pod2.json')
         pod2File.text == String.format(POD_N, 2)
     }
 }

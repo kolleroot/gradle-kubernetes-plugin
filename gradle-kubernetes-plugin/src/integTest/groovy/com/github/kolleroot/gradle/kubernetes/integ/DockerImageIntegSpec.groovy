@@ -63,10 +63,10 @@ class DockerImageIntegSpec extends Specification implements GradleTrait {
         """.stripIndent().trim()
 
         when:
-        succeeds 'kubernetesDockerfiles'
+        succeeds 'dockerfiles'
 
         then:
-        buildResult.task(':kubernetesDockerfileSimpleImage').outcome == SUCCESS
+        buildResult.task(':dockerfileSimpleImage').outcome == SUCCESS
         def dockerfile = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/Dockerfile')
 
         dockerfile.exists()
@@ -118,7 +118,7 @@ class DockerImageIntegSpec extends Specification implements GradleTrait {
         def resultHomeZipMap = ['user-a/user-a-home.txt': USER_A_HOME, 'user-b/user-b-home.txt': USER_B_HOME]
 
         when:
-        succeeds 'kubernetesDockerfileSimpleImageRoot0', 'kubernetesDockerfileSimpleImageHome1'
+        succeeds 'dockerfileSimpleImageRoot0', 'dockerfileSimpleImageHome1'
 
         then:
         def rootZip0 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/root-0.zip')

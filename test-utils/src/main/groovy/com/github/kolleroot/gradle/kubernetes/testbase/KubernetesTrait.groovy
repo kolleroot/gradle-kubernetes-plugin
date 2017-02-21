@@ -82,8 +82,7 @@ trait KubernetesTrait {
     }
 
     void createAndWaitTillReady(HasMetadata hasMetadata, long time, TimeUnit unit) {
-        HasMetadata created = kubernetesClient.resource(hasMetadata).createOrReplace()
-        kubernetesClient.resource(created).waitUntilReady(time, unit)
+        kubernetesClient.resource(hasMetadata).createOrReplaceAnd().waitUntilReady(time, unit)
     }
 
     Container getRegistryContainer(String name, int port) {
@@ -122,7 +121,7 @@ trait KubernetesTrait {
 
         @Override
         void eventReceived(Watcher.Action action, ServiceAccount resource) {
-            if (!resource.secrets.empty) {
+            if (!resource?.secrets?.empty) {
                 latch.countDown()
             }
         }
