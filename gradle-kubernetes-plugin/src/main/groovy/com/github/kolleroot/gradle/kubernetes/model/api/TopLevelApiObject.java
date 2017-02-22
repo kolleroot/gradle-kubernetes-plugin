@@ -15,7 +15,6 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model.api;
 
-import com.owlike.genson.annotation.JsonIgnore;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
 
