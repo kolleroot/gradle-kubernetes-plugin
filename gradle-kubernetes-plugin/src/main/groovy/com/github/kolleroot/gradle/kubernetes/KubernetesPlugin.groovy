@@ -143,8 +143,6 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Mutate
         void addDockerFileTask(ModelMap<Task> tasks,
-                               @Path('tasks.dockerfiles') Task dockerfilesTask,
-                               @Path('tasks.buildDockerImages') Task buildDockerImagesTask,
                                @Path('buildDir') File buildDir,
                                @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerImages.each { dockerImage ->
@@ -180,7 +178,6 @@ class KubernetesPlugin implements Plugin<Project> {
                 }
 
                 Dockerfile dockerfileTask = tasks.get(dockerfileTaskName) as Dockerfile
-                dockerfilesTask.dependsOn dockerfileTask
 
                 String dockerBuildImageTaskName = TaskNameHelper.getBuildTaskName(dockerImage)
                 tasks.create dockerBuildImageTaskName, DockerBuildImage, {
@@ -194,17 +191,13 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     inputs.files dockerfileTask, zipTasks
                 }
-
-                DockerBuildImage buildImageTask = tasks.get(dockerBuildImageTaskName) as DockerBuildImage
-                buildDockerImagesTask.dependsOn buildImageTask
             }
         }
 
         @SuppressWarnings('GrMethodMayBeStatic')
         @Mutate
         void addDockerTagPushTasks(ModelMap<Task> tasks,
-                                   @Path('tasks.tagDockerImages') tagDockerImagesTask,
-                                   @Path('tasks.pushDockerImages') pushDockerImagesTask,
+                                   // @Path('tasks.pushDockerImages') pushDockerImagesTask,
                                    ModelMap<DockerRegistryTaskName> dockerRegistries,
                                    @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerRegistries.each { dockerRegistry ->
@@ -224,7 +217,6 @@ class KubernetesPlugin implements Plugin<Project> {
                     }
 
                     Task tagTask = tasks.get(tagTaskName)
-                    tagDockerImagesTask.dependsOn tagTask
 
                     String pushTaskName = TaskNameHelper.getPushTaskName(dockerRegistry, dockerImage)
 
@@ -237,9 +229,6 @@ class KubernetesPlugin implements Plugin<Project> {
 
                         dependsOn tagTask
                     }
-
-                    Task pushTask = tasks.get(pushTaskName)
-                    pushDockerImagesTask.dependsOn pushTask
                 }
             }
         }
@@ -249,8 +238,7 @@ class KubernetesPlugin implements Plugin<Project> {
         void addKubernetesObjectGeneratorTasks(
                 ModelMap<Task> tasks,
                 @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
-                @Path('buildDir') File buildDir,
-                @Path('tasks.generateKubernetesObjects') Task kubernetesObjectsTask) {
+                @Path('buildDir') File buildDir) {
             kubernetesObjects.each { kubernetesObject ->
                 String taskName = TaskNameHelper.getGenerateTaskName(kubernetesObject)
 
@@ -261,9 +249,6 @@ class KubernetesPlugin implements Plugin<Project> {
                     object = kubernetesObject
                     jsonFile = "$buildDir/kubernetes/objects/${kubernetesObject.name}.json"
                 }
-
-                Task kubernetesObjectTask = tasks.get(taskName)
-                kubernetesObjectsTask.dependsOn kubernetesObjectTask
             }
         }
 
@@ -271,7 +256,6 @@ class KubernetesPlugin implements Plugin<Project> {
         @Mutate
         void addKubernetesCreateTask(
                 ModelMap<Task> tasks,
-                @Path('tasks.createKubernetesObjects') Task createKubernetesObjectsTask,
                 @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
                 @Path('buildDir') File buildDir
         ) {
@@ -284,9 +268,6 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     configFile = "$buildDir/kubernetes/objects/${kubernetesObject.name}.json"
                 }
-
-                Task createTask = tasks.get(createTaskName)
-                createKubernetesObjectsTask.dependsOn createTask
             }
         }
 
@@ -312,7 +293,6 @@ class KubernetesPlugin implements Plugin<Project> {
         @SuppressWarnings('GrMethodMayBeStatic')
         @Finalize
         void connectPushWithOpenAndClose(ModelMap<Task> tasks,
-                                         @Path('tasks.pushDockerImages') pushDockerImagesTask,
                                          ModelMap<DockerRegistryTaskName> dockerRegistries,
                                          @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             dockerRegistries.each { dockerRegistry ->
@@ -325,8 +305,6 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     push.dependsOn open
                     push.finalizedBy close
-
-                    pushDockerImagesTask.dependsOn close
                 }
             }
         }

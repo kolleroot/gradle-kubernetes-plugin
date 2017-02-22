@@ -27,7 +27,7 @@ import io.fabric8.kubernetes.client.KubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClientException
 import io.fabric8.kubernetes.client.Watch
 import io.fabric8.kubernetes.client.Watcher
-import io.fabric8.kubernetes.client.dsl.ClientResource
+import io.fabric8.kubernetes.client.dsl.Resource
 import org.junit.After
 import org.junit.Before
 
@@ -62,11 +62,11 @@ trait KubernetesTrait {
 
         CountDownLatch serviceAccountReady = new CountDownLatch(1)
 
-        ClientResource<ServiceAccount, DoneableServiceAccount> sacr = kubernetesClient.serviceAccounts().inNamespace(namespace).withName('default')
+        Resource<ServiceAccount, DoneableServiceAccount> sacr = kubernetesClient.serviceAccounts().inNamespace(namespace).withName('default')
 
         Watch watch = sacr.watch(new ServiceAccountReadinessWatcher(serviceAccountReady))
 
-        if (!sacr.get().secrets.empty) {
+        if (!sacr.get()?.secrets?.empty) {
             serviceAccountReady.countDown()
         }
 
