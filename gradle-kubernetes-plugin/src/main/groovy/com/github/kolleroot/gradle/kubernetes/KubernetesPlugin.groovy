@@ -67,7 +67,6 @@ class KubernetesPlugin implements Plugin<Project> {
     static final String KUBERNETES_GENERATE_OBJECTS_TASK = 'generateKubernetesObjects'
     static final String KUBERNETES_CREATE_OBJECTS_TASK = 'createKubernetesObjects'
 
-
     @Override
     void apply(Project project) {
         project.apply plugin: DockerRemoteApiPlugin
@@ -334,8 +333,9 @@ class KubernetesPlugin implements Plugin<Project> {
 
         @SuppressWarnings('GrMethodMayBeStatic')
         @Finalize
-        void connectCreateObjectWithGenerateObject(ModelMap<Task> tasks,
-                                                   @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects) {
+        void connectCreateObjectWithGenerateObject(
+                ModelMap<Task> tasks,
+                @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects) {
             kubernetesObjects.each { kubernetesObject ->
                 Task generateTask = tasks.get(TaskNameHelper.getGenerateTaskName(kubernetesObject))
                 Task createTask = tasks.get(TaskNameHelper.getCreateTaskName(kubernetesObject))
@@ -346,10 +346,11 @@ class KubernetesPlugin implements Plugin<Project> {
 
         @SuppressWarnings('GrMethodMayBeStatic')
         @Finalize
-        void connectCreateObjectWithPush(ModelMap<Task> tasks,
-                                         @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
-                                         ModelMap<DockerRegistryTaskName> dockerRegistries,
-                                         @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
+        void connectCreateObjectWithPush(
+                ModelMap<Task> tasks,
+                @Path('kubernetes.kubernetesObjects') KubernetesObjectContainer kubernetesObjects,
+                ModelMap<DockerRegistryTaskName> dockerRegistries,
+                @Path('kubernetes.dockerImages') ModelMap<DockerImage> dockerImages) {
             kubernetesObjects.each { kubernetesObject ->
                 Task createTask = tasks.get(TaskNameHelper.getCreateTaskName(kubernetesObject))
 
