@@ -114,6 +114,23 @@ model {
 }
 ```
 
+### Tipps and Tricks
+There are some quite handy tricks when working with gradle, that allow you to
+be more flexible in your declarations.
+
+#### Use quotes in method names
+There are some characters in java and gradle which aren't allowed to be in
+method names. To circumvent this restriction, you can put quotes (single or
+double) around the method name like in `model.kubernetes.dockerRegistries.'localhost:5000'`
+in the example above.
+
+#### Use the create methods of `ModelMap`
+The `ModelMap` provides, like the `ModelSet`, a `create` method with the
+addition of a name parameter. This name can be an arbitrary string with any
+special characters. Be aware, that these strings are also used in other places
+e. g. to tag the docker images.
+
+
 ### Caveats
 This plugin uses the new rule based model configuration mechanism in gradle
 ([link](https://docs.gradle.org/current/userguide/software_model.html)). If
@@ -137,7 +154,9 @@ there are a view caveats.
   
     * Primitive arrays:
     
-        `externalIPs = ["192.168.2.100", "192.168.2.101"]`
+        ```groovy
+        externalIPs = ["192.168.2.100", "192.168.2.101"]
+        ```
   
     * Object arrays:
     
@@ -157,7 +176,9 @@ there are a view caveats.
 divided into primitive and object maps.
     * Primitive maps:
     
-        `labels = [app: 'RestApi', 'env': 'production']`
+        ```groovy
+        labels = [app: 'RestApi', 'env': 'production']
+        ```
     
     * Object maps:
     
