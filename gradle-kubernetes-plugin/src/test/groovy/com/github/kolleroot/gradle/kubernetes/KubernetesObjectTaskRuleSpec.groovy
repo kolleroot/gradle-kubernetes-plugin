@@ -69,9 +69,27 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
         then: 'there exists a file in the build folder'
 
         File json = new File(buildFolder.root, '/build/kubernetes/objects/myApp.json')
-        json.text == '{"apiVersion":"v1beta1","kind":"Deployment",' +
-                '"metadata":{"name":"MyApp","namespace":"test"},' +
-                '"spec":{"replicas":1,"template":{"spec":{"containers":[{"image":"ubuntu:yakety","name":"main"}]}}}' +
+        json.text ==
+                '{\n' +
+                '  "apiVersion":"v1beta1",\n' +
+                '  "kind":"Deployment",\n' +
+                '  "metadata":{\n' +
+                '    "name":"MyApp",\n' +
+                '    "namespace":"test"\n' +
+                '  },\n' +
+                '  "spec":{\n' +
+                '    "replicas":1,\n' +
+                '    "template":{\n' +
+                '      "spec":{\n' +
+                '        "containers":[\n' +
+                '          {\n' +
+                '            "image":"ubuntu:yakety",\n' +
+                '            "name":"main"\n' +
+                '          }\n' +
+                '        ]\n' +
+                '      }\n' +
+                '    }\n' +
+                '  }\n' +
                 '}'
     }
 
@@ -130,10 +148,22 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
         buildResult.task(':generateKubernetesObjectPod2').outcome == TaskOutcome.SUCCESS
 
         and: 'there exist files in the build folder'
-        final String POD_N = '{"apiVersion":"v1","kind":"Pod",' +
-                '"metadata":{"name":"Pod%d"},' +
-                '"spec":{"containers":[{"image":"ubuntu:yakety","name":"main"}]}' +
-                '}'
+        final String POD_N =
+                        '{\n' +
+                        '  "apiVersion":"v1",\n' +
+                        '  "kind":"Pod",\n' +
+                        '  "metadata":{\n' +
+                        '    "name":"Pod%d"\n' +
+                        '  },\n' +
+                        '  "spec":{\n' +
+                        '    "containers":[\n' +
+                        '      {\n' +
+                        '        "image":"ubuntu:yakety",\n' +
+                        '        "name":"main"\n' +
+                        '      }\n' +
+                        '    ]\n' +
+                        '  }\n' +
+                        '}'
 
         File pod1File = new File(buildFolder.root, '/build/kubernetes/objects/pod1.json')
         pod1File.text == String.format(POD_N, 1)

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.model.api
+package com.github.kolleroot.gradle.kubernetes.model.serializer
 
+import com.github.kolleroot.gradle.kubernetes.model.api.PreserveOnEmptyAware
 import com.owlike.genson.Context
 import com.owlike.genson.Converter
 import com.owlike.genson.Genson

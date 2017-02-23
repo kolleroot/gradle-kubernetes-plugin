@@ -15,9 +15,10 @@
  */
 package com.github.kolleroot.gradle.kubernetes.task
 
-import com.github.kolleroot.gradle.kubernetes.model.api.GradleGenson
 import com.github.kolleroot.gradle.kubernetes.model.api.TopLevelApiObject
+import com.github.kolleroot.gradle.kubernetes.model.serializer.GradleGenson
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -27,10 +28,11 @@ import org.gradle.api.tasks.TaskAction
  */
 class KubernetesModelSerializerTask<T extends TopLevelApiObject> extends DefaultTask {
     protected T object
+    protected boolean indent = true
     protected File jsonFile
 
     KubernetesModelSerializerTask() {
-            outputs.upToDateWhen { false }
+        outputs.upToDateWhen { false }
     }
 
     @Internal
@@ -40,6 +42,15 @@ class KubernetesModelSerializerTask<T extends TopLevelApiObject> extends Default
 
     void setObject(T object) {
         this.object = object
+    }
+
+    @Input
+    boolean isIndent() {
+        indent
+    }
+
+    void setIndent(boolean indent) {
+        this.indent = indent
     }
 
     @OutputFile
@@ -53,7 +64,7 @@ class KubernetesModelSerializerTask<T extends TopLevelApiObject> extends Default
 
     @TaskAction
     void generate() {
-        GradleGenson genson = new GradleGenson()
+        GradleGenson genson = new GradleGenson(indent)
         jsonFile.withWriter { w ->
             genson.serialize(object, w)
         }

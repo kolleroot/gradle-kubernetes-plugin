@@ -54,6 +54,7 @@ class KubernetesModelSerializerTaskSpec extends Specification implements GradleT
                 tasks.create 'generateJson', KubernetesModelSerializerTask, {
                     object = pod
                     jsonFile = "build/pod.json"
+                    indent = false
                 }
             }
         }

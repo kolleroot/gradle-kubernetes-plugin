@@ -15,6 +15,7 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model.api
 
+import com.github.kolleroot.gradle.kubernetes.model.serializer.GradleGenson
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.model.Managed
 import org.gradle.model.Model
@@ -23,7 +24,7 @@ import org.gradle.model.RuleSource
 import spock.lang.Specification
 
 /**
- * Specify the {@link EmptyObjectRemoverJsonWriter}
+ * Specify the {@link com.github.kolleroot.gradle.kubernetes.model.serializer.EmptyObjectRemoverJsonWriter}
  */
 class EmptyObjectRemoverJsonWriterSpec extends Specification implements GradleProjectTrait {
 

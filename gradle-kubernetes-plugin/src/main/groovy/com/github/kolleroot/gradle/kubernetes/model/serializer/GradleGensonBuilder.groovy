@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.kolleroot.gradle.kubernetes.model.api
+package com.github.kolleroot.gradle.kubernetes.model.serializer
 
 import com.owlike.genson.Context
 import com.owlike.genson.Converter
@@ -29,8 +29,15 @@ import com.owlike.genson.stream.ObjectWriter
 class GradleGenson {
     private final Genson genson
 
+    private final boolean indent
+
     GradleGenson() {
+        this(false)
+    }
+
+    GradleGenson(boolean indent) {
         this.genson = new GradleGensonBuilder().create()
+        this.indent = indent
     }
 
     /**
@@ -50,7 +57,7 @@ class GradleGenson {
      * @param w the writer to write to
      */
     void serialize(Object o, Writer w) {
-        ObjectWriter objectWriter = new EmptyObjectRemoverJsonWriter(w, genson.skipNull, genson.htmlSafe, false)
+        ObjectWriter objectWriter = new EmptyObjectRemoverJsonWriter(w, genson.skipNull, genson.htmlSafe, this.indent)
         genson.serialize(o, o.getClass(), objectWriter, new Context(genson))
     }
 }
