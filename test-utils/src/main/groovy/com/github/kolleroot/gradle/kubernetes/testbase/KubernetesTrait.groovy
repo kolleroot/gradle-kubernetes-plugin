@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.DoneableServiceAccount
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.kubernetes.api.model.ServiceAccount
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
@@ -66,7 +67,8 @@ trait KubernetesTrait {
 
         Watch watch = sacr.watch(new ServiceAccountReadinessWatcher(serviceAccountReady))
 
-        if (!sacr.get()?.secrets?.empty) {
+        List<ObjectReference> secrets
+        if ((secrets = sacr.get()?.secrets) != null && !secrets.empty) {
             serviceAccountReady.countDown()
         }
 
@@ -121,14 +123,14 @@ trait KubernetesTrait {
 
         @Override
         void eventReceived(Watcher.Action action, ServiceAccount resource) {
-            if (!resource?.secrets?.empty) {
+            List<ObjectReference> secrets
+            if ((secrets = resource.secrets) != null && !secrets.empty) {
                 latch.countDown()
             }
         }
 
         @Override
         void onClose(KubernetesClientException cause) {
-
         }
     }
 }
