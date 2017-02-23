@@ -15,6 +15,7 @@
  */
 package com.github.kolleroot.gradle.kubernetes.model.api
 
+import com.github.kolleroot.gradle.kubernetes.model.serializer.GradleGenson
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.model.Managed
 import org.gradle.model.Model
