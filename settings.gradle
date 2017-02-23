@@ -3,4 +3,3 @@ rootProject.name = 'kubernetes'
 include ":gradle-kubernetes-plugin"
 include ":api-model"
 include ":test-utils"
-include ":standalone-test"
