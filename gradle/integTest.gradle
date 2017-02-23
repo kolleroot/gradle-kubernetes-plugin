@@ -11,6 +11,8 @@ task integTest(type: Test) {
 
     testClassesDir = sourceSets.integTest.output.classesDir
     classpath = sourceSets.integTest.runtimeClasspath
+
+    maxParallelForks = 2
 }
 
 gradlePlugin {
