@@ -1,0 +1,119 @@
+import com.github.kolleroot.gradle.kubernetes.buildsrc.MutateTopLevelApiElement
+import io.swagger.codegen.config.CodegenConfigurator
+import org.detoeuf.SwaggerCodeGenTask
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    // id 'maven-publish'
+    id 'codenarc'
+}
+
+apply from: "${project.rootDir}/gradle/testBase.gradle"
+apply from: "${project.rootDir}/gradle/integTest.gradle"
+
+group = 'com.github.kolleroot.gradle'
+version = '0.1'
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs += [
+                    "$buildDir/swagger/kubernetes/model"
+            ]
+        }
+    }
+}
+
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+
+    compile "com.bmuschko:gradle-docker-plugin:${libraryVersions.dockerPlugin}"
+    compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
+
+    compile "io.swagger:swagger-annotations:${libraryVersions.swaggerAnnotations}"
+    compile "com.owlike:genson:${libraryVersions.genson}"
+    compile 'com.google.code.gson:gson:2.8.0'
+
+    testBaseCompile project(':test-utils')
+}
+
+gradlePlugin {
+    plugins {
+        kubernetesDeploymentPlugin {
+            id = 'com.github.kolleroot.gradle.kubernetes'
+            implementationClass = 'com.github.kolleroot.gradle.kubernetes.KubernetesPlugin'
+        }
+    }
+}
+
+codenarcMain {
+    configFile file("${rootDir}/config/codenarc/codenarc-main.rules")
+}
+
+codenarcTestBase {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+codenarcTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+codenarcIntegTest {
+    configFile file("${rootDir}/config/codenarc/codenarc-test.rules")
+}
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.github.kolleroot.gradle'
+            artifactId 'gradle-kubernetes-plugin'
+            version '0.1.0'
+
+            from components.java
+        }
+    }
+}*/
+
+task generateKubernetesModel(type: SwaggerCodeGenTask) {
+    configurator = new CodegenConfigurator()
+            .setLang('java')
+            .setOutputDir("$buildDir/swagger/kubernetes/codegen")
+            .setInputSpec("$projectDir/src/main/swagger/swagger.json")
+    //.setInputSpec('https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger
+    //        .json')
+            .setTemplateDir("$projectDir/src/main/swagger/tpl")
+            .addAdditionalProperty('dateLibrary', 'java8')
+            .addAdditionalProperty('serializableModel', 'true')
+    //.addTypeMapping('array', 'org.gradle.model.ModelSet')
+    //.addTypeMapping('map', 'org.gradle.model.ModelMap')
+            .addTypeMapping('resource.Quantity', 'String')
+            .addTypeMapping('intstr.IntOrString', 'String')
+            .addTypeMapping('byte[]', 'String')
+            .addLanguageSpecificPrimitive('String')
+            .setModelPackage('com.github.kolleroot.gradle.kubernetes.model.api')
+}
+
+task extractGeneratedKubernetesModel(type: Copy, dependsOn: generateKubernetesModel) {
+    from("$buildDir/swagger/kubernetes/codegen/src/main/java") {
+        include 'com/github/kolleroot/gradle/kubernetes/model/api/*.java'
+    }
+
+    into "$buildDir/swagger/kubernetes/extracted"
+}
+
+task fixTopLevelObjects(type: MutateTopLevelApiElement, dependsOn: extractGeneratedKubernetesModel) {
+    source = extractGeneratedKubernetesModel
+
+    ignoreClasses << 'V1OwnerReference.java'
+
+    destinationDir = "$buildDir/swagger/kubernetes/model"
+}
+
+compileGroovy.dependsOn fixTopLevelObjects
+
+test {
+    maxParallelForks = 1
+}

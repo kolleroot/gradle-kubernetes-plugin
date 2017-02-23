@@ -21,13 +21,14 @@ import io.fabric8.kubernetes.api.model.DoneableServiceAccount
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.kubernetes.api.model.ServiceAccount
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClientException
 import io.fabric8.kubernetes.client.Watch
 import io.fabric8.kubernetes.client.Watcher
-import io.fabric8.kubernetes.client.dsl.ClientResource
+import io.fabric8.kubernetes.client.dsl.Resource
 import org.junit.After
 import org.junit.Before
 
@@ -62,11 +63,12 @@ trait KubernetesTrait {
 
         CountDownLatch serviceAccountReady = new CountDownLatch(1)
 
-        ClientResource<ServiceAccount, DoneableServiceAccount> sacr = kubernetesClient.serviceAccounts().inNamespace(namespace).withName('default')
+        Resource<ServiceAccount, DoneableServiceAccount> sacr = kubernetesClient.serviceAccounts().inNamespace(namespace).withName('default')
 
         Watch watch = sacr.watch(new ServiceAccountReadinessWatcher(serviceAccountReady))
 
-        if (!sacr.get().secrets.empty) {
+        List<ObjectReference> secrets
+        if ((secrets = sacr.get()?.secrets) != null && !secrets.empty) {
             serviceAccountReady.countDown()
         }
 
@@ -82,8 +84,7 @@ trait KubernetesTrait {
     }
 
     void createAndWaitTillReady(HasMetadata hasMetadata, long time, TimeUnit unit) {
-        HasMetadata created = kubernetesClient.resource(hasMetadata).createOrReplace()
-        kubernetesClient.resource(created).waitUntilReady(time, unit)
+        kubernetesClient.resource(hasMetadata).createOrReplaceAnd().waitUntilReady(time, unit)
     }
 
     Container getRegistryContainer(String name, int port) {
@@ -122,14 +123,14 @@ trait KubernetesTrait {
 
         @Override
         void eventReceived(Watcher.Action action, ServiceAccount resource) {
-            if (!resource.secrets.empty) {
+            List<ObjectReference> secrets
+            if ((secrets = resource.secrets) != null && !secrets.empty) {
                 latch.countDown()
             }
         }
 
         @Override
         void onClose(KubernetesClientException cause) {
-
         }
     }
 }

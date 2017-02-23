@@ -1,1 +1,0 @@
-\s+/\*\*(?:\s+\*\s+.*?)*\s*\*+/\s+public String getName\(\);\s+public void setName\(String name\);\s+?\n
