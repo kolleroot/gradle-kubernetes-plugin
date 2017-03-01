@@ -37,6 +37,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
 
     testBaseCompile project(':test-utils')
+    testBaseCompile "org.reflections:reflections:${libraryVersions.reflections}"
 }
 
 gradlePlugin {
@@ -93,12 +94,12 @@ task generateKubernetesModel(type: SwaggerCodeGenTask) {
             .addTypeMapping('intstr.IntOrString', 'String')
             .addTypeMapping('byte[]', 'String')
             .addLanguageSpecificPrimitive('String')
-            .setModelPackage('com.github.kolleroot.gradle.kubernetes.model.api')
+            .setModelPackage('com.github.kolleroot.gradle.kubernetes.model.api.generated')
 }
 
 task extractGeneratedKubernetesModel(type: Copy, dependsOn: generateKubernetesModel) {
     from("$buildDir/swagger/kubernetes/codegen/src/main/java") {
-        include 'com/github/kolleroot/gradle/kubernetes/model/api/*.java'
+        include 'com/github/kolleroot/gradle/kubernetes/model/api/generated/*.java'
     }
 
     into "$buildDir/swagger/kubernetes/extracted"

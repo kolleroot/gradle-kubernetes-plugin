@@ -26,7 +26,7 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
     def "create a kubernetes deployment using the plugin"() {
         given: 'a build with the kubernetes plugin and an kubernetes object'
         buildFile << """
-        import com.github.kolleroot.gradle.kubernetes.model.api.V1beta1Deployment
+        import com.github.kolleroot.gradle.kubernetes.model.api.generated.V1beta1Deployment
 
         plugins {
             id 'com.github.kolleroot.gradle.kubernetes'
@@ -96,7 +96,7 @@ class KubernetesObjectTaskRuleSpec extends Specification implements GradleTrait 
     def "create two minimal pods"() {
         given: 'a build with the kubernetes plugin and an kubernetes object'
         buildFile << """
-        import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
+        import com.github.kolleroot.gradle.kubernetes.model.api.generated.V1Pod
 
         plugins {
             id 'com.github.kolleroot.gradle.kubernetes'

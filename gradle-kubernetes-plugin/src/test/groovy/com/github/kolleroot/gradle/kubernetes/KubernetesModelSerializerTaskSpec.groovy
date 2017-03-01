@@ -23,7 +23,7 @@ import spock.lang.Specification
  */
 class KubernetesModelSerializerTaskSpec extends Specification implements GradleTrait {
     static final String BASE_SETUP = """
-        import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
+        import com.github.kolleroot.gradle.kubernetes.model.api.generated.V1Pod
         import com.github.kolleroot.gradle.kubernetes.model.api.TopLevelApiObject
         import com.github.kolleroot.gradle.kubernetes.task.KubernetesModelSerializerTask
         import org.gradle.model.Defaults

@@ -22,7 +22,7 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.kolleroot.gradle.kubernetes.KubernetesPlugin
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
 import com.github.kolleroot.gradle.kubernetes.model.KubernetesLocalDockerRegistry
-import com.github.kolleroot.gradle.kubernetes.model.api.V1Pod
+import com.github.kolleroot.gradle.kubernetes.model.api.generated.V1Pod
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesCreate
 import com.github.kolleroot.gradle.kubernetes.task.KubernetesModelSerializerTask
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait

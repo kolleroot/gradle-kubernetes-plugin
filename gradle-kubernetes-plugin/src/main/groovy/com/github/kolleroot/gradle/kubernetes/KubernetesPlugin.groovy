@@ -303,6 +303,8 @@ class KubernetesPlugin implements Plugin<Project> {
                     Task open = tasks.get(dockerRegistry.openTaskName)
                     Task close = tasks.get(dockerRegistry.closeTaskName)
 
+                    open.finalizedBy close
+
                     push.dependsOn open
                     push.finalizedBy close
                 }
