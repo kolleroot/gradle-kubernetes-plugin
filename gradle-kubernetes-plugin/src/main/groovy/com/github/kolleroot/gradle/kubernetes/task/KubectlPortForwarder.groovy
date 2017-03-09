@@ -18,6 +18,7 @@ package com.github.kolleroot.gradle.kubernetes.task
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
@@ -87,9 +88,38 @@ class KubectlPortForwarder implements Closeable {
                 LOGGER.warn reader.readLine()
             }
 
-            process.waitFor(10, TimeUnit.MILLISECONDS)
-            if (!process.alive) {
-                throw new IllegalStateException('Unable to start the the kubectl process for port forwarding')
+            final CountDownLatch LATCH = new CountDownLatch(1)
+            final CountDownLatch ERR = new CountDownLatch(1)
+
+            Thread.start countdownWhenLineRead(LATCH, process.in)
+            Thread.start countdownWhenLineRead(LATCH, process.err, ERR)
+
+            LATCH.await(120, TimeUnit.SECONDS)
+            ERR.await(1, TimeUnit.SECONDS)
+
+            if (LATCH.count != 0 || ERR.count == 0 || !process.alive) {
+                process.destroy()
+                if(LATCH.count != 0) {
+                    throw new IllegalStateException('Unable to start the the kubectl process for port forwarding: TIMEOUT')
+                } else {
+                    throw new IllegalStateException('Unable to start the the kubectl process for port forwarding: PROCESS ALREADY DEAD')
+                }
+            }
+        }
+    }
+
+    private static Closure<?> countdownWhenLineRead(
+            final CountDownLatch latch, final InputStream stream, final CountDownLatch otherLatch = null) {
+        return {
+            stream.newReader().with { reader ->
+                try {
+                    LOGGER.warn reader.readLine()
+                    otherLatch?.countDown()
+                    latch.countDown()
+                } catch (IOException e) {
+                    // don't cate at the moment
+                    LOGGER.trace 'error while reading', e
+                }
             }
         }
     }

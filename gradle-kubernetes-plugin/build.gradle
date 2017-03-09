@@ -81,7 +81,7 @@ task generateKubernetesModel(type: SwaggerCodeGenTask) {
     configurator = new CodegenConfigurator()
             .setLang('java')
             .setOutputDir("$buildDir/swagger/kubernetes/codegen")
-            .setInputSpec("$projectDir/src/main/swagger/swagger.json")
+            .setInputSpec("$projectDir/src/main/swagger/swagger-1.5.2.json")
     //.setInputSpec('https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/swagger
     //        .json')
             .setTemplateDir("$projectDir/src/main/swagger/tpl")
