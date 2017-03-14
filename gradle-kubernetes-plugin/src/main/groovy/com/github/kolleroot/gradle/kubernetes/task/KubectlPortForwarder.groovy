@@ -85,25 +85,26 @@ class KubectlPortForwarder implements Closeable {
     private void waitTillReady() {
         if (process.alive) {
             // CAREFUL: don't close the inputstream because kubectl will die because of SIGPIPE (exit code 141)
-            process.inputStream.newReader().with { reader ->
-                LOGGER.warn reader.readLine()
-            }
 
             final CountDownLatch LATCH = new CountDownLatch(1)
             final CountDownLatch ERR = new CountDownLatch(1)
+            final CountDownLatch SUCCESS = new CountDownLatch(1)
 
-            Thread.start countdownWhenLineRead(LATCH, process.in)
+            Thread.start countdownWhenLineRead(LATCH, process.in, SUCCESS)
             Thread.start countdownWhenLineRead(LATCH, process.err, ERR)
 
             LATCH.await(120, TimeUnit.SECONDS)
-            ERR.await(1, TimeUnit.SECONDS)
 
-            if (LATCH.count != 0 || ERR.count == 0 || !process.alive) {
+            if (SUCCESS.count != 0 || ERR.count == 0 || !process.alive) {
                 process.destroy()
                 if (LATCH.count != 0) {
                     throw new IllegalStateException(START_ERROR + 'TIMEOUT')
-                } else {
+                } else if (!process.alive) {
                     throw new IllegalStateException(START_ERROR + 'PROCESS ALREADY DEAD')
+                } else if (SUCCESS.count == 0) {
+                    throw new IllegalStateException(START_ERROR + 'NO SUCCESS')
+                } else if (ERR.count == 0) {
+                    throw new IllegalStateException(START_ERROR + 'ERROR')
                 }
             }
         }
@@ -115,11 +116,15 @@ class KubectlPortForwarder implements Closeable {
             stream.newReader().with { reader ->
                 try {
                     LOGGER.warn reader.readLine()
-                    otherLatch?.countDown()
-                    latch.countDown()
+
+                    if (otherLatch != null) {
+                        otherLatch.countDown()
+                    }
                 } catch (IOException e) {
                     // don't cate at the moment
-                    LOGGER.trace 'error while reading', e
+                    LOGGER.warn 'error while reading', e
+                } finally {
+                    latch.countDown()
                 }
             }
         }
