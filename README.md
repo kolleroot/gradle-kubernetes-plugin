@@ -48,8 +48,7 @@ plugins {
 
 This _minimalistic_ example defines a docker image `simpleImage` which will be
 pushed to the docker registry `localhost:5000` and a kubernetes pod named
-`simpleApplication`. This is currently as minimalistic, as possible, but I hope
-that in the future there will be more automated configuration and less typing.
+`simpleApplication`. This is currently as minimalistic as possible.
 
 ```groovy
 import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
@@ -114,11 +113,11 @@ model {
 }
 ```
 
-### Tipps and Tricks
+### Tips and Tricks
 There are some quite handy tricks when working with gradle, that allow you to
 be more flexible in your declarations.
 
-#### Use quotes in method names
+#### Put quotes arround method names
 There are some characters in java and gradle which aren't allowed to be in
 method names. To circumvent this restriction, you can put quotes (single or
 double) around the method name like in `model.kubernetes.dockerRegistries.'localhost:5000'`
@@ -135,22 +134,21 @@ e. g. to tag the docker images.
 This plugin uses the new rule based model configuration mechanism in gradle
 ([link](https://docs.gradle.org/current/userguide/software_model.html)). If
 you aren't familiar with this technique, it shouldn't be any problem. But
-there are a view caveats.
+there are a few caveats.
 
 * When creating a kubernetes api object, you have to specify the type of the
   object. All these objects are in the package `com.github.kolleroot.gradle.kubernetes.model.api`
-  and have a class name in the following format: `VersionKind` like `V1Pod` and
+  and are named in the following format: `VersionKind` like `V1Pod` and
   `V1beta1Deployment`.
 
-* The kubernetes api sometimes uses empty objects to represent, that an object
-  was set but has no explicit properties. Gradle on the other hand can't
-  distinguish between configured and unconfigured objects, as far as I know.
-  To resolv this issue you have to set the boolean property `preserve` to
-  `true`. This property won't be in the final JSON but tells the serializer to
-  preserve this empty object.
+* The kubernetes api sometimes uses empty objects to represent that an object
+  was set but has no explicit properties. But gradle can't distinguish between
+  configured and unconfigured objects. To resolve this issue you have to set
+  the boolean property `preserve` to `true`. This property won't be in the
+  final JSON but tells the serializer to preserve this empty object.
 
-* There are two types of arrays: the one with primitive elements like strings
-  and numbers and the one with objects like `V1Container`.
+* There are two types of arrays:one with primitive elements like strings and
+  numbers and one with objects like `V1Container`.
   
     * Primitive arrays:
     
@@ -172,7 +170,7 @@ there are a view caveats.
             }
         }
         ```
-* There are also two types of maps with similar differences. They are too
+* There are also two types of maps with similar differences. They are also
 divided into primitive and object maps.
     * Primitive maps:
     
