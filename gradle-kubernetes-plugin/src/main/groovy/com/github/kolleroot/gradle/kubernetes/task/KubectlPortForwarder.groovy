@@ -18,6 +18,7 @@ package com.github.kolleroot.gradle.kubernetes.task
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
@@ -47,6 +48,7 @@ class KubectlPortForwarder implements Closeable {
     private final String port
 
     private final Process process
+    static final String START_ERROR = 'Unable to start the the kubectl process for port forwarding: '
 
     /**
      * Forward a port via the kubectl command.
@@ -83,13 +85,47 @@ class KubectlPortForwarder implements Closeable {
     private void waitTillReady() {
         if (process.alive) {
             // CAREFUL: don't close the inputstream because kubectl will die because of SIGPIPE (exit code 141)
-            process.inputStream.newReader().with { reader ->
-                LOGGER.warn reader.readLine()
-            }
 
-            process.waitFor(10, TimeUnit.MILLISECONDS)
-            if (!process.alive) {
-                throw new IllegalStateException('Unable to start the the kubectl process for port forwarding')
+            final CountDownLatch LATCH = new CountDownLatch(1)
+            final CountDownLatch ERR = new CountDownLatch(1)
+            final CountDownLatch SUCCESS = new CountDownLatch(1)
+
+            Thread.start countdownWhenLineRead(LATCH, process.in, SUCCESS)
+            Thread.start countdownWhenLineRead(LATCH, process.err, ERR)
+
+            LATCH.await(120, TimeUnit.SECONDS)
+
+            if (SUCCESS.count != 0 || ERR.count == 0 || !process.alive) {
+                process.destroy()
+                if (LATCH.count != 0) {
+                    throw new IllegalStateException(START_ERROR + 'TIMEOUT')
+                } else if (!process.alive) {
+                    throw new IllegalStateException(START_ERROR + 'PROCESS ALREADY DEAD')
+                } else if (SUCCESS.count == 0) {
+                    throw new IllegalStateException(START_ERROR + 'NO SUCCESS')
+                } else if (ERR.count == 0) {
+                    throw new IllegalStateException(START_ERROR + 'ERROR')
+                }
+            }
+        }
+    }
+
+    private static Closure<?> countdownWhenLineRead(
+            final CountDownLatch latch, final InputStream stream, final CountDownLatch otherLatch = null) {
+        return {
+            stream.newReader().with { reader ->
+                try {
+                    LOGGER.warn reader.readLine()
+
+                    if (otherLatch != null) {
+                        otherLatch.countDown()
+                    }
+                } catch (IOException e) {
+                    // don't cate at the moment
+                    LOGGER.warn 'error while reading', e
+                } finally {
+                    latch.countDown()
+                }
             }
         }
     }

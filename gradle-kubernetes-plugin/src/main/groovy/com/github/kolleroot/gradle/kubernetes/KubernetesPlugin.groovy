@@ -78,7 +78,6 @@ class KubernetesPlugin implements Plugin<Project> {
     @SuppressWarnings('GroovyUnusedDeclaration')
     static class PluginRules extends RuleSource {
 
-        @SuppressWarnings('GrMethodMayBeStatic')
         @Model
         void kubernetes(Kubernetes kubernetes) {
         }
