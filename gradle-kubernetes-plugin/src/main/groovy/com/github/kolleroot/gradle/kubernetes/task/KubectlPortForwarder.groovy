@@ -48,6 +48,7 @@ class KubectlPortForwarder implements Closeable {
     private final String port
 
     private final Process process
+    static final String START_ERROR = 'Unable to start the the kubectl process for port forwarding: '
 
     /**
      * Forward a port via the kubectl command.
@@ -99,10 +100,10 @@ class KubectlPortForwarder implements Closeable {
 
             if (LATCH.count != 0 || ERR.count == 0 || !process.alive) {
                 process.destroy()
-                if(LATCH.count != 0) {
-                    throw new IllegalStateException('Unable to start the the kubectl process for port forwarding: TIMEOUT')
+                if (LATCH.count != 0) {
+                    throw new IllegalStateException(START_ERROR + 'TIMEOUT')
                 } else {
-                    throw new IllegalStateException('Unable to start the the kubectl process for port forwarding: PROCESS ALREADY DEAD')
+                    throw new IllegalStateException(START_ERROR + 'PROCESS ALREADY DEAD')
                 }
             }
         }
