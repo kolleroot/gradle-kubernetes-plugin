@@ -20,6 +20,8 @@ import com.github.dockerjava.api.command.InspectImageResponse
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.command.WaitContainerResultCallback
+import com.github.kolleroot.gradle.kubernetes.testbase.internal.LogContainerStringCallback
 import org.junit.After
 import org.junit.Before
 
@@ -55,12 +57,30 @@ trait DockerTrait {
     void removeImageIfExists(String name) {
         try {
             dockerClient.removeImageCmd(name).exec()
-        } catch(NotFoundException e) {
+        } catch (NotFoundException e) {
 
         }
     }
 
     InspectImageResponse inspectImage(String name) {
         dockerClient.inspectImageCmd(name).exec()
+    }
+
+    String runCommandInsideImage(String image, String command) {
+        def respCreate = dockerClient.createContainerCmd(image).withCmd(command.split()).exec()
+        dockerClient.startContainerCmd(respCreate.id).exec()
+
+        def exitCode = dockerClient.waitContainerCmd(respCreate.id).exec(new WaitContainerResultCallback()).awaitStatusCode()
+
+        String response = dockerClient
+                .logContainerCmd(respCreate.id)
+                .withStdOut(true)
+                .exec(new LogContainerStringCallback())
+                .awaitCompletion()
+                .toString()
+
+        dockerClient.removeContainerCmd(respCreate.id).exec()
+
+        response
     }
 }

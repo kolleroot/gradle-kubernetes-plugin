@@ -46,7 +46,7 @@ final class TaskNameHelper {
         KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize()
     }
 
-    static String getDockerfileZipTaskName(DockerImage dockerImage, FileBundle bundle) {
+    static String getDockerfileTarTaskName(DockerImage dockerImage, FileBundle bundle) {
         KUBERNETES_DOCKERFILE_BASE + dockerImage.name.capitalize() +
                 "${bundle.bundleName.split(/\./)[0].replace('-', '').capitalize()}"
     }
