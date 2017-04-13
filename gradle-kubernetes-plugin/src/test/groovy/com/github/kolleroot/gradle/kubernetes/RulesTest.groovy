@@ -23,6 +23,7 @@ import com.github.kolleroot.gradle.kubernetes.model.Kubernetes
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.internal.core.ModelRuleExecutionException
 import spock.lang.Specification
@@ -249,10 +250,10 @@ class RulesTest extends Specification implements GradleProjectTrait {
         DockerImage dockerImage = kubernetes.dockerImages['simpleImage'] as DockerImage
 
         then:
-        dockerImage.instructions.contains 'ADD something-0.zip /home/something/'
+        dockerImage.instructions.contains 'ADD something-0.tar /home/something/'
         dockerImage.bundles.size() == 2
-        dockerImage.bundles[0].bundleName == 'something-0.zip'
-        dockerImage.bundles[1].bundleName == 'something-1.zip'
+        dockerImage.bundles[0].bundleName == 'something-0.tar'
+        dockerImage.bundles[1].bundleName == 'something-1.tar'
     }
 
     def 'docker image create zip file tasks'() {
@@ -287,11 +288,11 @@ class RulesTest extends Specification implements GradleProjectTrait {
         Task something0 = tasks.findByName("dockerfileSimpleImageSomething${baseCounter}")
         Task something1 = tasks.findByName("dockerfileSimpleImageSomething${baseCounter + 1}")
 
-        something0 instanceof Zip
-        something1 instanceof Zip
+        something0 instanceof Tar
+        something1 instanceof Tar
 
-        (something0 as Zip).archiveName == "something-${baseCounter}.zip".toString()
-        (something1 as Zip).archiveName == "something-${baseCounter + 1}.zip".toString()
+        (something0 as Tar).archiveName == "something-${baseCounter}.tar".toString()
+        (something1 as Tar).archiveName == "something-${baseCounter + 1}.tar".toString()
     }
 
     def 'docker image build depends on docker file and zip files'() {
@@ -327,9 +328,9 @@ class RulesTest extends Specification implements GradleProjectTrait {
 
         then:
         Dockerfile dockerfileSimpleImage = tasks.findByName('dockerfileSimpleImage') as Dockerfile
-        Zip dockerfileSimpleImageRoot0 = tasks.findByName("dockerfileSimpleImageRoot${baseCounter}") as Zip
-        Zip dockerfileSimpleImageHome1 =
-                tasks.findByName("dockerfileSimpleImageHome${baseCounter + 1}") as Zip
+        Tar dockerfileSimpleImageRoot0 = tasks.findByName("dockerfileSimpleImageRoot${baseCounter}") as Tar
+        Tar dockerfileSimpleImageHome1 =
+                tasks.findByName("dockerfileSimpleImageHome${baseCounter + 1}") as Tar
         Task buildDockerImageTask = tasks.findByName('buildDockerImageSimpleImage')
         Task buildDockerImagesTask = tasks.findByName(KubernetesPlugin.KUBERNETES_DOCKER_BUILD_IMAGES_TASK)
 

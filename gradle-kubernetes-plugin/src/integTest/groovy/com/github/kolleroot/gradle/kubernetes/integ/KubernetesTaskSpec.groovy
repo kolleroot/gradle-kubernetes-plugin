@@ -225,6 +225,35 @@ class KubernetesTaskSpec extends Specification implements KubernetesTrait, Gradl
         buildResult.output.contains 'read response slow last'
     }
 
+    def "forward to a non existing pod"() {
+        given: 'a gradle build file with an open port instruction to a non existing pod'
+        buildFile << """
+        import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
+
+        plugins {
+            id 'com.github.kolleroot.gradle.kubernetes'
+        }
+
+        repositories {
+            jcenter()
+        }
+
+        task open(type: KubernetesOpenPortForwardTask) {
+            forwardNamespace = '$namespace'
+            forwardPod = 'echo-server'
+            forwardPort = '8080:8080'
+        }
+        """.stripIndent().trim()
+
+        when: 'the build fails to run the open task'
+        fails 'open'
+
+        then: 'an exception is thrown'
+        buildResult.task(':open').outcome == TaskOutcome.FAILED
+
+        buildResult.output.contains 'IllegalStateException: Unable to start the the kubectl process for port forwarding'
+    }
+
     private String getTestPodYaml() {
         """
         apiVersion: v1

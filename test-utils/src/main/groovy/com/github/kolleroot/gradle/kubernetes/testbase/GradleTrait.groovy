@@ -48,12 +48,22 @@ trait GradleTrait {
     }
 
     void succeeds(String... tasks) {
-        def args = [*tasks, '--stacktrace']
+        List<String> args = [*tasks, '--stacktrace'] as List<String>
         buildResult = GradleRunner.create()
                 .withProjectDir(buildFolder.root)
                 .withDebug(true)
                 .withPluginClasspath()
                 .withArguments(args)
                 .build()
+    }
+
+    void fails(String... tasks) {
+        List<String> args = [*tasks, '--stacktrace'] as List<String>
+        buildResult = GradleRunner.create()
+                .withProjectDir(buildFolder.root)
+                .withDebug(true)
+                .withPluginClasspath()
+                .withArguments(args)
+                .buildAndFail()
     }
 }

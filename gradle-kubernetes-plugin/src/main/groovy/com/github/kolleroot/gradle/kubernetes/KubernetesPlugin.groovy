@@ -35,7 +35,7 @@ import com.github.kolleroot.gradle.kubernetes.task.KubernetesOpenPortForwardTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.tasks.bundling.Zip
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.model.Each
 import org.gradle.model.Finalize
 import org.gradle.model.Model
@@ -78,7 +78,6 @@ class KubernetesPlugin implements Plugin<Project> {
     @SuppressWarnings('GroovyUnusedDeclaration')
     static class PluginRules extends RuleSource {
 
-        @SuppressWarnings('GrMethodMayBeStatic')
         @Model
         void kubernetes(Kubernetes kubernetes) {
         }
@@ -148,22 +147,22 @@ class KubernetesPlugin implements Plugin<Project> {
             dockerImages.each { dockerImage ->
                 String relativeDockerImagePath = "kubernetes/dockerimages/${dockerImage.name}"
 
-                List<Task> zipTasks = []
+                List<Task> tarTasks = []
                 dockerImage.bundles.each { bundle ->
-                    String zipTaskName = TaskNameHelper.getDockerfileZipTaskName(dockerImage, bundle)
-                    tasks.create zipTaskName, Zip, {
+                    String tarTaskName = TaskNameHelper.getDockerfileTarTaskName(dockerImage, bundle)
+                    tasks.create tarTaskName, Tar, {
                         archiveName bundle.bundleName
                         destinationDir Paths.get(buildDir.toString(), relativeDockerImagePath).toFile()
                     }
 
-                    // apply the spec from the model to the zipTask
-                    Zip zipTask = tasks.get(zipTaskName) as Zip
-                    bundle.spec.delegate = zipTask
+                    // apply the spec from the model to the tarTask
+                    Tar tarTask = tasks.get(tarTaskName) as Tar
+                    bundle.spec.delegate = tarTask
                     //noinspection UnnecessaryQualifiedReference
                     bundle.spec.resolveStrategy = Closure.DELEGATE_FIRST
                     bundle.spec.call()
 
-                    zipTasks << zipTask
+                    tarTasks << tarTask
                 }
 
                 String dockerfileTaskName = TaskNameHelper.getDockerfileTaskName(dockerImage)
@@ -189,7 +188,7 @@ class KubernetesPlugin implements Plugin<Project> {
 
                     tag = dockerImage.name
 
-                    inputs.files dockerfileTask, zipTasks
+                    inputs.files dockerfileTask, tarTasks
                 }
             }
         }

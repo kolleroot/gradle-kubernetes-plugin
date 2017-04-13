@@ -25,15 +25,19 @@ model {
     kubernetes {
         dockerImages {
             simple(DefaultDockerImage) {
-                // from 'openjdk:8-jdk'
-                from 'alpine:3.5'
+                from 'openjdk:8-jre-alpine'
+                addFiles '/opt/app/', {
+                    from installDist.outputs
+                }
+
+                defaultCommand '/opt/app/bin/example-application-project'
             }
         }
 
         dockerRegistries {
             'localhost:5000'(KubernetesLocalDockerRegistry) {
                 namespace = 'kube-system'
-                pod = 'kube-registry-1640093215-3o399'
+                pod = 'kube-registry-913633130-34rlf'
                 port = '5000:5000'
             }
         }
@@ -51,6 +55,7 @@ model {
                         create {
                             name = 'test-container'
                             image = 'localhost:5000/simple'
+                            imagePullPolicy = 'always'
                             volumeMounts.create {
                                 name = 'data'
                                 mountPath = '/data'

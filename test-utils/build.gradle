@@ -10,6 +10,7 @@ dependencies {
         exclude group: 'org.codehaus.groovy'
     }
     compile "org.apache.commons:commons-lang3:${libraryVersions.apacheCommons}"
+    compile "org.apache.commons:commons-compress:${libraryVersions.apacheCommonsCompress}"
 
     compile "io.fabric8:kubernetes-client:${libraryVersions.kubernetesClient}"
     compile "com.github.docker-java:docker-java:${libraryVersions.dockerJava}"

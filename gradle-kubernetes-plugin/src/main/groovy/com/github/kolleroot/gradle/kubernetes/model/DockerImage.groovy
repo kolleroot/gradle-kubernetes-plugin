@@ -225,7 +225,7 @@ abstract class DefaultDockerImage implements DockerImage {
         } else {
             baseName = 'root'
         }
-        String name = "${baseName}-${DockerImageFileBundleCounter.nextUnique}.zip"
+        String name = "${baseName}-${DockerImageFileBundleCounter.nextUnique}.tar"
 
         bundles.create {
             bundleName = name

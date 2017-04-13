@@ -18,7 +18,7 @@ package com.github.kolleroot.gradle.kubernetes.integ
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 import com.github.kolleroot.gradle.kubernetes.testbase.GradleTrait
-import com.github.kolleroot.gradle.kubernetes.testbase.ZipFileHelper
+import com.github.kolleroot.gradle.kubernetes.testbase.ArchiveHelper
 import spock.lang.Specification
 
 /**
@@ -72,11 +72,11 @@ class DockerImageIntegSpec extends Specification implements GradleTrait {
         dockerfile.exists()
         dockerfile.readLines().join('\n') == """
         FROM nothing
-        ADD root-0.zip /
+        ADD root-0.tar /
         """.stripIndent().trim()
     }
 
-    def 'Defined ZipTasks create the right zip files'() {
+    def 'Defined TarTasks create the right tar files'() {
         given:
         buildFile << """
         import com.github.kolleroot.gradle.kubernetes.model.DefaultDockerImage
@@ -114,19 +114,19 @@ class DockerImageIntegSpec extends Specification implements GradleTrait {
         buildFolder.newFile('user-b-home.txt') << USER_B_HOME
 
         and:
-        def resultRootZipMap = ['test-file.txt': TEST_TEXT_FILE]
-        def resultHomeZipMap = ['user-a/user-a-home.txt': USER_A_HOME, 'user-b/user-b-home.txt': USER_B_HOME]
+        def resultRootTarMap = ['test-file.txt': TEST_TEXT_FILE]
+        def resultHomeTarMap = ['user-a/user-a-home.txt': USER_A_HOME, 'user-b/user-b-home.txt': USER_B_HOME]
 
         when:
         succeeds 'dockerfileSimpleImageRoot0', 'dockerfileSimpleImageHome1'
 
         then:
-        def rootZip0 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/root-0.zip')
-        rootZip0.exists()
-        ZipFileHelper.toMap(rootZip0) == resultRootZipMap
+        def rootTar0 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/root-0.tar')
+        rootTar0.exists()
+        ArchiveHelper.toMap(rootTar0) == resultRootTarMap
 
-        def homeZip1 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/home-1.zip')
-        homeZip1.exists()
-        ZipFileHelper.toMap(homeZip1) == resultHomeZipMap
+        def homeTar1 = new File(buildFolder.root, 'build/kubernetes/dockerimages/simpleImage/home-1.tar')
+        homeTar1.exists()
+        ArchiveHelper.toMap(homeTar1) == resultHomeTarMap
     }
 }
