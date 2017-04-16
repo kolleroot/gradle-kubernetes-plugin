@@ -15,7 +15,6 @@
  */
 package com.github.kolleroot.gradle.kubernetes.integ
 
-import com.github.dockerjava.api.model.ExposedPort
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.kolleroot.gradle.kubernetes.task.KubectlPortForwarder
 import com.github.kolleroot.gradle.kubernetes.testbase.DockerHelper

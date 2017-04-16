@@ -24,7 +24,6 @@ import com.github.kolleroot.gradle.kubernetes.testbase.GradleProjectTrait
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.bundling.Tar
-import org.gradle.api.tasks.bundling.Zip
 import org.gradle.model.internal.core.ModelRuleExecutionException
 import spock.lang.Specification
 
