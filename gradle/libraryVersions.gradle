@@ -2,11 +2,11 @@ ext {
     libraryVersions = [
             groovyAll         : GroovySystem.getVersion(), // use the groovy version of gradle
             //kubernetesClient  : '1.4.34',
-            kubernetesClient  : '2.0.7',
+            kubernetesClient  : '2.2.13',
             slf4j             : '1.7.23',
-            dockerPlugin      : '3.0.5',
+            dockerPlugin      : '3.0.6',
             swaggerCodegen    : '2.2.1',
-            swaggerAnnotations: '1.5.12',
+            swaggerAnnotations: '1.5.13',
             genson            : '1.4',
 
             javaeeApi         : '7.0',
@@ -15,7 +15,7 @@ ext {
             spock             : '1.0-groovy-2.4',
             apacheCommons     : '3.5',
             apacheCommonsCompress: '1.13',
-            dockerJava        : '3.0.7',
-            reflections       : '0.9.10'
+            dockerJava        : '3.0.9',
+            reflections       : '0.9.11'
     ]
 }
