@@ -1,6 +1,8 @@
 Gradle Kubernetes Plugin
 ========================
 
+**!!! THIS PROJECT IS DEPRECATED !!!**
+
 The purpose of the `gradle-kubernetes-plugin` is to improve the development
 process of creating and deploying kubernetes applications.
 
